@@ -7,7 +7,7 @@ Create the `JPath` object with the `jpaths()` method
 
 ### jpaths()
 
-How to create a `[JPath](#the-jpath-object)` object:
+How to create a [`JPath`](#the-jpath-object) object:
 
 ```js
 // create an empty path
