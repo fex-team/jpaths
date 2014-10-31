@@ -186,6 +186,24 @@ var dest = jpaths('M0,0H50');
 var tween = path.tween(dest, 0.5); // tween.toString() will be 'M0,0L75,0'
 ```
 
+## Rendering
+
+The `JPath` object can be rendered to a canvas 2d context or a svg path element.
+
+```js
+var path = jpath('M0,0L100,0,0,100');
+
+// render to canvas
+var ctx = canvas.getContext('2d');
+path.render(ctx);
+ctx.fillStyle = 'red';
+ctx.fill();
+
+// render to svg path element
+var pathElement = document.querySelector('svg #triangle');
+path.render(pathElement); // in fact, this equals to pathElement.setAttribute('d', path);
+```
+
 ## The JPath Object
 
 The `jpath()` method returns the `JPath` object, which is instanceof `jpath.JPath`. You can construct a `JPath` instance with `new` operator.
@@ -197,22 +215,24 @@ var path = new jpath.JPath();
 
 The detail usage of the `JPath` object is described above. Here's the list:
 
-* constructor jpath()
-* constructor jpath(pathString)
-* .append(commandName, params...)
-* .append(pathString)
-* .append(pathArray)
-* .toString()
-* .toArray()
-* .toAbsolute()
-* .toNormalized()
-* .toCurve()
-* .length()
-* .at(position)
-* .cut(position)
-* .sub(position, length)
-* .transform(matrix)
-* .tween(dest, t)
+* `constructor jpath()`
+* `constructor jpath(pathString)`
+* `.append(commandName, params...)`
+* `.append(pathString)`
+* `.append(pathArray)`
+* `.toString()`
+* `.toArray()`
+* `.toAbsolute()`
+* `.toNormalized()`
+* `.toCurve()`
+* `.length()`
+* `.at(position)`
+* `.cut(position)`
+* `.sub(position, length)`
+* `.transform(matrix)`
+* `.tween(dest, t)`
+* `.render(CanvasRenderingContext2D ctx)`
+* `.render(SVGPathElement element)`
 
 ## Appendix.I. Supported Command Table
 
