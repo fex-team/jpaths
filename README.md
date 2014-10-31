@@ -50,14 +50,10 @@ jpaths.define('rect', function(params) {
 
     if (params.length != 2) throw new Error('The rect command should have 2 parameters');
 
-    var result = [];
-    while (params.length) {
-        var dx = params.shift();
-        var dy = params.shift();
-        result = result.concat(['h', dx, 'v', dy, 'h', -dx, 'v', -dy, 'z']);
-    }
+    var dx = params.shift();
+    var dy = params.shift();
 
-    return result;
+    return ['h', dx, 'v', dy, 'h', -dx, 'v', -dy, 'z'];
 });
 
 // append the `rect` shape
