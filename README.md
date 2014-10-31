@@ -38,7 +38,7 @@ path.append([['M', 0, 0], ['L', 0, 0]])
 
 ```
 
-\* You can checkout the [appendix table](#appendix-i-standard-command-table) for commands jpaths supports
+\* You can checkout the [appendix table](#appendixi-supported-command-table) for commands jpaths supports
 
 ### jpaths.define()
 
