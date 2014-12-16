@@ -6,7 +6,7 @@ module( 'case/jpaths' );
 test('列表内没有列表标号的项后退', function () {
         ok(true,"123");
     define('start', function(require) {
-        var jpaths = require('jpaths');
+        var jpaths = te_jpaths;
         var path = jpaths(['m', 0, 0, 'A', 10, 10, 0, 0, 0, 10, 102]);
         // var path = jpaths();
         //
@@ -23,7 +23,7 @@ test('列表内没有列表标号的项后退', function () {
         var xs = "m0,0A10,10,0,0,0,10,102";
         equal(xs, "m0,0A10,10,0,0,0,10,102", "标记名称2");
         start();
-    },1000);
+    },100);
 
 });
 

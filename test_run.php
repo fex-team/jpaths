@@ -11,6 +11,7 @@
 </head>
 <body>
 <script src="lib/require.js"></script>
+<!--<script src="_test/case/tools.js"></script>-->
 <script src="_test/case/jpaths.js"></script>
 
 <div id="qunit"></div>
