@@ -319,7 +319,7 @@ define(function(require, exports, module) {
                     });
 
                     path.setAttribute('d', pathString2);
-                    subs.push({path: path, pathName: pathName, });
+                    subs.push({path: path, pathName: pathName, index: count++});
                 }
             });
 

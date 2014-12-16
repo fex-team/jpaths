@@ -32,10 +32,10 @@ define(function(require, exports, module) {
             pathNodeXY = this.pathNodeXY;
         var curPos = [].slice.call(pathNodeXY, -1)[0];
         var letter = pathString.charAt(0);
-        var bigLetter = letter.toUpperCase();
+        var big = letter.toUpperCase();
 
         // toDo 异常处理   
-        if (letter !== bigLetter || bigLetter === 'H' || bigLetter === 'V' || bigLetter === 'Z') {
+        if (big === 'H' || big === 'V' || big === 'Z' || letter !== big) {
             this._pathString += pathString;
             pathString = 'M' + curPos.x + ',' + curPos.y + pathString;
             pathString = utils.toString({
@@ -46,7 +46,7 @@ define(function(require, exports, module) {
             pathList2.shift(0);
 
             pathNodeXY2 = utils.pathNodePos(pathString, curPos.x, curPos.y);
-            pathNodeXY2.shift();
+            pathNodeXY2.shift(0);
 
             this.pathString += pathString.replace(/M\d+,\d+/, '');
         } else {
@@ -58,7 +58,9 @@ define(function(require, exports, module) {
             pathList2 = utils.toArray(pathString);
 
             pathNodeXY2 = utils.pathNodePos(pathString, curPos.x, curPos.y);
-            pathNodeXY2.shift();
+            if( big !== 'M') {
+                pathNodeXY2.shift();
+            }
         }
 
         this.pathList = pathList1.concat(pathList2);
