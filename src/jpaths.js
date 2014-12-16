@@ -46,7 +46,7 @@ define(function(require, exports, module) {
             pathList2.shift(0);
 
             pathNodeXY2 = utils.pathNodePos(pathString, curPos.x, curPos.y);
-            pathNodeXY2.shift();
+            pathNodeXY2.shift(0);
 
             this.pathString += pathString.replace(/M\d+,\d+/, '');
         } else {
@@ -58,7 +58,9 @@ define(function(require, exports, module) {
             pathList2 = utils.toArray(pathString);
 
             pathNodeXY2 = utils.pathNodePos(pathString, curPos.x, curPos.y);
-            pathNodeXY2.shift();
+            if( big !== 'M') {
+                pathNodeXY2.shift();
+            }
         }
 
         this.pathList = pathList1.concat(pathList2);
