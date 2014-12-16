@@ -11,7 +11,7 @@ test('列表内没有列表标号的项后退', function () {
         var x = path.toString();
         console.log(path.toString()); // [['M', 0, 0], ['h', 3], ['v', 4], ['L', 5, 6]]
         setTimeout(function(){
-            equal(x, "m0,0A10,10,0,0,0,10,102", "标记名称1");
+            equal(x, "m0,0A10,10,0,0,0,10,102", "标记名称12");
             start();
         },100);
     });
@@ -28,7 +28,7 @@ test('列表内没有列表标号的项后退', function () {
         window.path = path;
         var x = path.toString();
         console.log(path.toString()); // [['M', 0, 0], ['h', 3], ['v', 4], ['L', 5, 6]]
-        equal(x, "m0,0A10,10,0,0,0,10,10", "标记名称1");
+        equal(x, "m0,0A10,10,0,0,0,10,10", "标记名称12");
     });
     require(['start2'], function() {
         console.log('start');
@@ -36,7 +36,7 @@ test('列表内没有列表标号的项后退', function () {
     stop();
     setTimeout(function(){
         var xs = "m0,0A10,10,0,0,0,10,10";
-        equal(xs, "m0,0A10,10,0,0,0,10,10", "标记名称2");
+        equal(xs, "m0,0A10,10,0,0,0,10,10", "标记名称22");
         start();
     },100);
 });
@@ -48,7 +48,7 @@ test('列表内没有列表标号的项后退', function () {
         window.path = path;
         var x = path.toString();
         console.log(path.toString()); // [['M', 0, 0], ['h', 3], ['v', 4], ['L', 5, 6]]
-        equal(x, "m0,0A10,10,0,0,0,10,10", "标记名称1");
+        equal(x, "m0,0A10,10,0,0,0,10,10", "标记名称12");
     });
     require(['start3'], function() {
         console.log('start');
@@ -56,7 +56,7 @@ test('列表内没有列表标号的项后退', function () {
     stop();
     setTimeout(function(){
         var xs = "m0,0A10,10,0,0,0,10,10";
-        equal(xs, "m0,0A10,10,0,0,0,10,10", "标记名称2");
+        equal(xs, "m0,0A10,10,0,0,0,10,10", "标记名称22");
         start();
     },100);
 });

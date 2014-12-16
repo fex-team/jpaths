@@ -18,15 +18,15 @@
 		}
 	}
 	QUnit.moduleStart = function() {
-		stop();
-		/* 为批量执行等待import.php正确返回 */
-		var h = setInterval(function() {
-			if (window && window['UM']) {
-				clearInterval(h);
-				ms.apply(this, arguments);
-				start();
-			}
-		}, 20);
+//		stop();
+//		/* 为批量执行等待import.php正确返回 */
+//		var h = setInterval(function() {
+//			if (window && window['UM']) {
+//				clearInterval(h);
+//				ms.apply(this, arguments);
+//				start();
+//			}
+//		}, 20);
 	};
 	QUnit.done = function() {
 		_d(arguments);
