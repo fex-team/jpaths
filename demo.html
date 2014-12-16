@@ -11,12 +11,13 @@
 <script src="lib/require.js"></script>
 <script>
 define('start', function(require) {
-    var jpaths = require('jpaths');
-    var path = jpaths(['m', 0, 0, 'A', 10, 10, 0, 0, 0, 10, 10]);
+    var jpaths = require('src/jpaths');
+    // var path = jpaths([['M', 0, 0], ['h', 3], ['v', 4], ['L', 5, 6]]);
+        var path = jpaths(['M', 0, 0, 'A', 10, 10, 0, 0, 0, 10, 10, 'h', 3, 'v', 4, 'L', 5, 6, 'z']);
     // var path = jpaths();
     // 
     window.path = path;
-    console.log(path.toString()); // [['M', 0, 0], ['h', 3], ['v', 4], ['L', 5, 6]]
+    console.log(path.toString('%n')); // [['M', 0, 0], ['h', 3], ['v', 4], ['L', 5, 6]]
 });
 require(['start'], function() {
     console.log('start');

@@ -12,16 +12,17 @@ define(function(require, exports, module) {
      * @param {String} template 模板
      * @param {Object} json 数据项
      */
-    var utils = require('utils/utils');
+    var utils = require('../utils/utils');
 
     function Path() {
         var pathString = [].slice.call(arguments).join('');
 
         this._pathString = pathString ? pathString : 'M0 0';
-        this.pathTool = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        this.path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         this.pathString = this.toString() || 'M 0 0';
         this.pathList = this.toArray();
         this.pathNodeXY = this.pathNodePos();
+        this.pathTotalLength = this.length();
     }
     Path.prototype.append = function() {
         var pathString = [].slice.call(arguments).join('');
@@ -67,56 +68,50 @@ define(function(require, exports, module) {
     Path.prototype.toString = function() {
         var args = [].slice.call(arguments);
         var len = args.length;
-        var tag = len === 0 ? 0 :
+        var opt = len === 0 ? 0 :
             args[0] === '%s' ? 1 :
             args[0] === '%n' ? 2 : 0;
         var result;
 
-        switch (tag) {
-            case 0:
-                result = utils.toString({
+        return utils.toString({
                     pathString: this._pathString,
-                    opt: 0
+                    opt: opt
                 });
-                break;
-            case 1:
-                result = utils.toString({
-                    pathString: this._pathString,
-                    opt: 1
-                });
-                break;
-            case 2:
-                result = utils.toString({
-                    pathString: this._pathString,
-                    opt: 2
-                });
-                break;
-            default:
-                console.log('unkown type of toString');
-                result = utils.toString({
-                    pathString: this._pathString,
-                    opt: 0
-                });
-        }
-        return result;
     };
     Path.prototype.toArray = Path.prototype.valueOf = function() {
-        var _path = this._pathString;
-        return utils.toArray(_path);
+        var _pathString = this._pathString;
+        return utils.toArray(_pathString);
     };
     Path.prototype.toRelative = function() {
-        var path = this.pathString;
-        return utils.toRelative(path);
+        var pathString = this.pathString;
+        return utils.toRelative(pathString);
     };
     Path.prototype.toAbsolute = function() {
-        var path = this.pathString;
-        return utils.toAbsolute(path);
+        var pathString = this.pathString;
+        return utils.toAbsolute(pathString);
     };
     Path.prototype.pathNodePos = function() {
-        var path = this.pathString;
-        return utils.pathNodePos(path);
+        var pathString = this.pathString;
+        return utils.pathNodePos(pathString);
     };
-    Path.prototype.length = function() {};
+    Path.prototype.length = function() {
+        var pathString = this.pathString;
+        return utils.pathLength(pathString, 0, 0);
+    };
+    Path.prototype.subPathes = function() {
+        var pathList = this.pathList;
+        var pathNodeXY = this.pathNodeXY;
+        return utils.subPathes(pathList, pathNodeXY);
+    };
+    Path.prototype.at = function(position) {
+        // length是沿着路径从起点出发的距离
+        var TotalLength = this.pathTotalLength;
+        if (position < 0 || position > TotalLength) {
+            alert('position is not in range of the path length');
+        } else {
+            
+        }
+    };
 
     module.exports = function(path) {
         return new Path(path);

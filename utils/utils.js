@@ -1,6 +1,5 @@
 define(function(require, exports, module) {
     var utils = {
-        pathTool: document.createElementNS('http://www.w3.org/2000/svg', 'path'),
         toString: function(dataopt) {
             var path = dataopt.pathString;
             var opt = dataopt.opt;
@@ -15,7 +14,7 @@ define(function(require, exports, module) {
                     result = path.replace(/,/g, ' ').replace(/(\d+)\s(\d+)(?=\s[a-z]|$)/gim, '$1,$2');
                     break;
                 case 2:
-                    result = path.replace(/,/g, ' ').replace(/(\d+)\s(\d+)(?=\s[a-z]|$)/gim, '$1,$2').replace(/\s([a-z])/gi, '\\n$1');
+                    result = path.replace(/,/g, ' ').replace(/(\d+)\s(\d+)(?=\s[a-z]|$)/gim, '$1,$2').replace(/\s([a-z])/gi, '\n$1');
                     break;
                 default:
                     console.log('unkown type of toString');
@@ -27,12 +26,12 @@ define(function(require, exports, module) {
         toArray: function() {
             var args = [].slice.call(arguments);
             var pathString = args.length ? args.join(' ').replace(/,/g, ' ') : '';
-            var pathTool = utils.pathTool;
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             var result = [],
                 pathList, i, letter, item;
 
-            pathTool.setAttribute('d', pathString);
-            pathList = pathTool.pathSegList;
+            path.setAttribute('d', pathString);
+            pathList = path.pathSegList;
 
             for (i = 0; i < pathList.length; i++) {
                 var param = [];
@@ -73,8 +72,8 @@ define(function(require, exports, module) {
             return result;
         },
         toRelative: function(pathString) {
-            var dx, dy, x0, y0, x1, y1, x2, y2, segs,
-                path = utils.pathTool;
+            var dx, dy, x0, y0, x1, y1, x2, y2, segs;
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             var set = function(type) {
                 var args = [].slice.call(arguments, 1),
                     rcmd = 'createSVGPathSeg' + type + 'Rel',
@@ -157,8 +156,8 @@ define(function(require, exports, module) {
             return path.getAttribute('d').replace(/Z/g, 'z');
         },
         toAbsolute: function(pathString) {
-            var x0, y0, x1, y1, x2, y2, segs,
-                path = utils.pathTool;
+            var x0, y0, x1, y1, x2, y2, segs;
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             var set = function(type) {
                 var args = [].slice.call(arguments, 1),
                     rcmd = 'createSVGPathSeg' + type + 'Abs',
@@ -231,8 +230,9 @@ define(function(require, exports, module) {
             return path.getAttribute('d').replace(/z/g, 'Z');
         },
         pathNodePos: function(pathString, x, y) {
-            var x0, y0, segs, pos = [],
-                path = utils.pathTool;
+            // x, y分别为当前路径的起始点坐标
+            var x0, y0, segs, pos = [];
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
             x = x ? x : 0;
             y = y ? y : 0;
@@ -263,6 +263,70 @@ define(function(require, exports, module) {
             }
 
             return pos;
+        },
+        pathLength: function(pathString, x, y) {
+            // x、y为指定路径的起始点，如果有必要的话
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+            if(typeof x === 'undefined' || typeof y === 'undefined') {
+                console.log('用pathLength求路径方法时，注意路径是否有明确的起点。默认以(0, 0)开始');
+            }
+            x = x ? x : 0;
+            y = y ? y : 0;
+            
+            pathString = 'M' + x + ',' + y + pathString;
+            path.setAttribute('d', pathString);
+
+            return path.getTotalLength();
+        },
+        subPathes: function(pathList, pathNodeXY) {
+            var subs = [];
+            var type, big, pathString, path, pathName, count = 0;
+            var x = pathNodeXY[0].x, y = pathNodeXY[0].y;
+            var names = {
+                'L': 'Line',
+                'H': 'Line',
+                'V': 'Line',
+                'A': 'Arc',
+                'C': 'Cubic-bezier',
+                'Q': 'Quard-bezier',
+                'S': 'short-hand-cubic-bezier',
+                'T': 'short-hand-quard-bezier',
+            };
+
+            pathList.forEach(function(item, index) {
+                type = item[0];
+                big  = type.toUpperCase();
+
+                if (big === 'M') {
+                    x = pathNodeXY[index].x;
+                    y = pathNodeXY[index].y;
+                } else if (big === 'Z') {
+                    pathString = 'M' + x + ',' + y + 'L' + (x = pathNodeXY[index].x) + ',' + (y = pathNodeXY[index].y);
+                    pathName = names['L'];
+                } else {
+                    pathString = 'M' + x + ',' + y + item.toString('');
+                    pathName = names[big];
+                    x = pathNodeXY[index].x;
+                    y = pathNodeXY[index].y;
+                }
+
+                if (pathString) {
+                    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    var pathString2 = utils.toString({
+                        pathString: pathString,
+                        opt: 0
+                    });
+
+                    path.setAttribute('d', pathString2);
+                    subs.push({path: path, pathName: pathName, });
+                }
+            });
+
+            return subs;
+        },
+        pathAt: function(pathString) {
+
         }
     };
 
