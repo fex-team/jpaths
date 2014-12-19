@@ -5,7 +5,7 @@ module( 'case/jpaths' );
 
 test('列表内没有列表标号的项后退', function () {
     define('start1', function(require) {
-        var jpaths = require('jpaths');
+        var jpaths = require('src/jpaths');
         var path = jpaths(['m', 0, 0, 'A', 10, 10, 0, 0, 0, 10, 102]);
         window.path = path;
         var x = path.toString();
@@ -13,7 +13,7 @@ test('列表内没有列表标号的项后退', function () {
         setTimeout(function(){
             equal(x, "m0,0A10,10,0,0,0,10,102", "标记名称1");
             start();
-        },100);
+        },50);
     });
     require(['start1'], function() {
         console.log('start');
@@ -24,7 +24,7 @@ test('列表内没有列表标号的项后退', function () {
 
 test('列表内没有列表标号的项后退', function () {
     define('start2', function(require) {
-        var jpaths = require('jpaths');
+        var jpaths = require('src/jpaths');
         var path = jpaths(['m', 0, 0, 'A', 10, 10, 0, 0, 0, 10, 10]);
         window.path = path;
         var x = path.toString();
@@ -39,12 +39,12 @@ test('列表内没有列表标号的项后退', function () {
         var xs = "m0,0A10,10,0,0,0,10,10";
         equal(xs, "m0,0A10,10,0,0,0,10,10", "标记名称2");
         start();
-    },100);
+    },50);
 });
 
 test('列表内没有列表标号的项后退', function () {
     define('start3', function(require) {
-        var jpaths = require('jpaths');
+        var jpaths = require('src/jpaths');
         var path = jpaths(['m', 0, 0, 'A', 10, 10, 0, 0, 0, 10, 10]);
         window.path = path;
         var x = path.toString();
@@ -59,5 +59,5 @@ test('列表内没有列表标号的项后退', function () {
         var xs = "m0,0A10,10,0,0,0,10,10";
         equal(xs, "m0,0A10,10,0,0,0,10,10", "标记名称2");
         start();
-    },100);
+    },50);
 });

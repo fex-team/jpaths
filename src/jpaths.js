@@ -18,11 +18,9 @@ define(function(require, exports, module) {
         var pathString = [].slice.call(arguments).join('');
 
         this._pathString = pathString ? pathString : 'M0 0';
-        this.path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         this.pathString = this.toString() || 'M 0 0';
         this.pathList = this.toArray();
         this.pathNodeXY = this.pathNodePos();
-        this.pathTotalLength = this.length();
     }
     Path.prototype.append = function() {
         var pathString = [].slice.call(arguments).join('');
@@ -48,7 +46,7 @@ define(function(require, exports, module) {
             pathNodeXY2 = utils.pathNodePos(pathString, curPos.x, curPos.y);
             pathNodeXY2.shift(0);
 
-            this.pathString += pathString.replace(/M\d+,\d+/, '');
+            this.pathString += pathString.replace(/M\d+\.?\d+,\d+\.?\d+/, '');
         } else {
             this._pathString += pathString;
             this.pathString += utils.toString({
@@ -65,7 +63,6 @@ define(function(require, exports, module) {
 
         this.pathList = pathList1.concat(pathList2);
         this.pathNodeXY = pathNodeXY.concat(pathNodeXY2);
-
     };
     Path.prototype.toString = function() {
         var args = [].slice.call(arguments);
@@ -101,22 +98,34 @@ define(function(require, exports, module) {
         return utils.pathLength(pathString, 0, 0);
     };
     Path.prototype.subPathes = function() {
-        var pathList = this.pathList;
-        var pathNodeXY = this.pathNodeXY;
+        var pathList = this.toArray();
+        var pathNodeXY = this.pathNodePos();
         return utils.subPathes(pathList, pathNodeXY);
     };
-    Path.prototype.at = function(position) {
-        // length是沿着路径从起点出发的距离
-        var TotalLength = this.pathTotalLength;
-        if (position < 0 || position > TotalLength) {
-            alert('position is not in range of the path length');
-        } else {
-            
-        }
+    Path.prototype.lengthes = function() {
+        // 用于获取第一段子路径，前两段子路径，..., 直到所有子路径的长度
+        var subPathes = this.subPathes();
+        return utils.lengthes(subPathes);
     };
+    Path.prototype.at = function(position) {
+        // position是沿着路径从起点出发的距离
+        var pathString = this.pathString;
+        return utils.at(pathString, position);
+    };
+    Path.prototype.cut = function(position) {
+        var sp   = this.subPathes();
+        var ls   = this.lengthes();
+        var pl   = this.toArray();
+        var cp   = this.at(position);
+        var subs = utils.cut(sp, ls, pl, position, cp.point);
 
+        return [new Path(subs[0]),
+                new Path(subs[1])
+            ];
+    };
     module.exports = function(path) {
         return new Path(path);
     };
     window.utils = utils;
+
 });

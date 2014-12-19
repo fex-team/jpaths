@@ -13,9 +13,10 @@
 define('start', function(require) {
     var jpaths = require('src/jpaths');
     // var path = jpaths([['M', 0, 0], ['h', 3], ['v', 4], ['L', 5, 6]]);
-        var path = jpaths(['M', 0, 0, 'A', 10, 10, 0, 0, 0, 10, 10, 'h', 3, 'v', 4, 'L', 5, 6, 'z']);
+        // var path = jpaths(['M', 0, 0, 'A', 10, 10, 0, 0, 0, 10, 10, 'h', 3, 'v', 4, 'L', 5, 6, 'z']);
     // var path = jpaths();
     // 
+    var path = jpaths('M0,0L10,10');
     window.path = path;
     console.log(path.toString('%n')); // [['M', 0, 0], ['h', 3], ['v', 4], ['L', 5, 6]]
 });

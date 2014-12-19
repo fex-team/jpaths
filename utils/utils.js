@@ -1,20 +1,25 @@
 define(function(require, exports, module) {
+    var g = require('../utils/geometry');
+    window.g = g;
     var utils = {
+        point2point: function(x1, y1, x2, y2) {
+            return Math.sqrt(Math.pow(x1- x2, 2) + Math.pow(y1 - y2, 2));
+        },
         toString: function(dataopt) {
             var path = dataopt.pathString;
             var opt = dataopt.opt;
             var result;
 
-            path = path.replace(/(\d+|[a-z])\s*,?\s*/gim, '$1,').replace(/,$/gm, '');
+            path = path.replace(/(\d+\.?\d+|[a-z])\s*,?\s*/gim, '$1,').replace(/,$/gm, '');
             switch (opt) {
                 case 0:
                     result = path.replace(/\s*,?\s*([a-z])\s*,?\s*/gi, '$1');
                     break;
                 case 1:
-                    result = path.replace(/,/g, ' ').replace(/(\d+)\s(\d+)(?=\s[a-z]|$)/gim, '$1,$2');
+                    result = path.replace(/,/g, ' ').replace(/(\d+\.?\d+)\s(\d+\.?\d+)(?=\s[a-z]|$)/gim, '$1,$2');
                     break;
                 case 2:
-                    result = path.replace(/,/g, ' ').replace(/(\d+)\s(\d+)(?=\s[a-z]|$)/gim, '$1,$2').replace(/\s([a-z])/gi, '\n$1');
+                    result = path.replace(/,/g, ' ').replace(/(\d+\.?\d+)\s(\d+\.?\d+)(?=\s[a-z]|$)/gim, '$1,$2').replace(/\s([a-z])/gi, '\n$1');
                     break;
                 default:
                     console.log('unkown type of toString');
@@ -169,7 +174,6 @@ define(function(require, exports, module) {
             path.setAttribute('d', pathString);
             segs = path.pathSegList;
 
-            var pos = [];
             for (var x = 0, y = 0, i = 0, len = segs.numberOfItems; i < len; ++i) {
                 var seg = segs.getItem(i),
                     c = seg.pathSegTypeAsLetter;
@@ -223,15 +227,13 @@ define(function(require, exports, module) {
                     x0 = x;
                     y0 = y;
                 }
-                pos.push([x,y]);
             }
-            console.log(pos);
 
             return path.getAttribute('d').replace(/z/g, 'Z');
         },
         pathNodePos: function(pathString, x, y) {
             // x, y分别为当前路径的起始点坐标
-            var x0, y0, segs, pos = [];
+            var x0, y0, type, segs, pos = [], precision = 1e-6, isBreakPoint = 0;/*1 表示true, 0表示false*/
             var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
             x = x ? x : 0;
@@ -243,10 +245,18 @@ define(function(require, exports, module) {
                 var seg = segs.getItem(i),
                     c = seg.pathSegTypeAsLetter;
 
+                isBreakPoint = 0;
+
                 if (/[MLHVCSQTA]/.test(c)) {
+                    if (c === 'M') {
+                        isBreakPoint = Math.abs(seg.x - x) > precision || Math.abs(seg.y - y) > precision ? 1 : 0;
+                    }
                     if ('x' in seg) x = seg.x;
                     if ('y' in seg) y = seg.y;
                 } else {
+                    if (c === 'm') {
+                        isBreakPoint = Math.abs(seg.x) > precision || Math.abs(seg.y) > precision ? 1 : 0;
+                    }
                     if ('x' in seg) x += seg.x;
                     if ('y' in seg) y += seg.y;
                     if (c == 'z' || c == 'Z') {
@@ -259,7 +269,7 @@ define(function(require, exports, module) {
                     x0 = x;
                     y0 = y;
                 }
-                pos.push({x: x, y: y});
+                pos.push({x: x, y: y, isBreakPoint: isBreakPoint});
             }
 
             return pos;
@@ -280,21 +290,17 @@ define(function(require, exports, module) {
             return path.getTotalLength();
         },
         subPathes: function(pathList, pathNodeXY) {
+            //用于获取路径的子路径
             var subs = [];
-            var type, big, pathString, path, pathName, count = 0;
+            var type, big, count = 0;
             var x = pathNodeXY[0].x, y = pathNodeXY[0].y;
-            var names = {
-                'L': 'Line',
-                'H': 'Line',
-                'V': 'Line',
-                'A': 'Arc',
-                'C': 'Cubic-bezier',
-                'Q': 'Quard-bezier',
-                'S': 'short-hand-cubic-bezier',
-                'T': 'short-hand-quard-bezier',
-            };
 
             pathList.forEach(function(item, index) {
+                var data  = [];
+                var start = [];
+                var end   = [];
+                var pathString;
+
                 type = item[0];
                 big  = type.toUpperCase();
 
@@ -302,31 +308,197 @@ define(function(require, exports, module) {
                     x = pathNodeXY[index].x;
                     y = pathNodeXY[index].y;
                 } else if (big === 'Z') {
+                    start.push(x, y);
                     pathString = 'M' + x + ',' + y + 'L' + (x = pathNodeXY[index].x) + ',' + (y = pathNodeXY[index].y);
-                    pathName = names['L'];
+                    end.push(x, y);
+                    data.push(x, y);
+                    typ = 'L';
                 } else {
+                    start.push(x, y);
                     pathString = 'M' + x + ',' + y + item.toString('');
-                    pathName = names[big];
+                    data = item.slice(1);
                     x = pathNodeXY[index].x;
                     y = pathNodeXY[index].y;
+                    end.push(x, y);
                 }
 
                 if (pathString) {
-                    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     var pathString2 = utils.toString({
                         pathString: pathString,
                         opt: 0
                     });
+                    var length;
 
-                    path.setAttribute('d', pathString2);
-                    subs.push({path: path, pathName: pathName, index: count++});
+                    length = utils.pathLength(pathString2, start[0], start[1]);
+                    length = Math.round(length * 10000) / 10000; 
+
+                    subs.push({pathString: pathString2, type: type, index: index, count: count++, pathData: data, startPoint: start, endPoint: end, length: length});
                 }
             });
 
             return subs;
         },
-        pathAt: function(pathString) {
+        lengthes: function(subPathes) {
+            var lens = [];
+            var sumLen = 0;
 
+            [].forEach.call(subPathes, function(item, index) {
+                sumLen += item.length;
+                lens.push(sumLen);
+            });
+
+            return lens;
+        },
+        at: function(pathString, position) {
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var totalLength;
+
+            path.setAttribute('d', pathString);
+            totalLength = path.getTotalLength();
+
+            if (position < 0 || position > totalLength) {
+                alert('position is not in range of the path length');
+            } else {
+                var precision = 1e-6, dl = 0.5;
+                var p, p1, p2, position1, position2;
+                var rotate, tangent, point;
+
+                p = path.getPointAtLength(position);
+
+                position1 = Math.max(position - dl, 0);
+                p1 = path.getPointAtLength(position1);
+                // 判断是否为断点
+                p1 = (dl >= Math.sqrt(Math.pow(p1.x - p.x, 2) + Math.pow(p1.y - p.y, 2))) ? p1 : p;
+
+                position2 = Math.min(position + dl, totalLength);
+                p2 = path.getPointAtLength(position2);
+                p2 = (dl >= Math.sqrt(Math.pow(p2.x - p.x, 2) + Math.pow(p2.y - p.y, 2))) ? p2 : p;
+
+                rotate = (Math.abs(p2.x - p1.x) > precision) ? Math.atan((p2.y - p1.y) / (p2.x - p1.x)) :
+                    (p2.y > p1.y) ? Math.PI * 0.5 : -Math.PI * 0.5;
+                tangent = [Math.cos(rotate).toFixed(3), Math.sin(rotate).toFixed(3)];
+                rotate = rotate.toFixed(4);
+                point = [p.x.toFixed(3), p.y.toFixed(3)];
+
+                return {
+                    point: point,
+                    tangent: tangent,
+                    rotate: rotate
+                };
+            }
+        },
+        cut: function(subPathes, lengthes, pathList, position, cutPoint) {
+            var sp = subPathes.slice(0),
+                ls = lengthes.slice(0),
+                pl = pathList.slice(0),
+                po = position,
+                cp = cutPoint,
+                n  = ls.length;
+
+            console.log(arguments);
+            if (position < 0 || position > ls[n - 1]) {
+                return;
+            } 
+
+            var stop   = false,
+                pathString,
+                i, cur, index, type, big, pathData, start, item,
+                sub1, sub2, subs;
+
+            for(i = 0; i < n && !stop; i++) {
+                if (ls[i] >= position) {
+                    cur  = i;
+                    stop = !stop;
+                }
+            }
+
+            item  = sp[cur];
+            index = item.index;
+            type  = item.type;
+            big   = type.toUpperCase();
+
+            if (type !== big) {
+                pathString = utils.toAbsolute(item.pathString);
+                pathData   = utils.toArray(pathString)[1].slice(1);
+            } else {
+                pathData   = item.pathData;
+            }
+
+            sub1  = pl.slice(0, index);
+            sub2  = pl.slice(index);
+
+            start = item.startPoint.slice(0);
+            end   = item.endPoint.slice(0);
+
+
+            if (big == 'S' || big == 'T') {
+                var item1, type1, pd1, hx, hy, flag;
+
+                if (cur > 0) {
+                        item1 = sp[cur - 1];
+                        type1 = item1.type.toUpperCase();
+                    }
+
+                flag = (big == 'S' && (type1 === 'S' || type1 === 'C')) ||
+                    (big == 'T' && type1 == 'Q');//严格需向前考察
+
+                if (flag) {
+                    pd1   = item1.pathData.slice(-4, 2);
+                    hx    = 2 * start[0] - pd1[0];
+                    hy    = 2 * start[1] - pd1[1];
+                    pathData.unshift(hx, hy);
+                } else {
+                    pathData.unshift(start[0], start[1]);
+                }
+            }
+      
+            pathData.unshift(start[0], start[1]);
+            console.log(pathData);
+
+            var temp1, temp2;
+            switch(big) {
+                case 'H': 
+                case 'V':
+                case 'L':
+                    sub1.push(['L', cp[0], cp[1]]);
+                    sub2.unshift(['M', cp[0], cp[1]], ['L', end[0], end[1]]);
+                    break;
+                case 'A':
+                    subs = g.cutArc(pathData, cp);
+
+                    temp1 = subs[0].slice(2).unshift(big);
+                    sub1.push(temp1);
+
+                    temp2 = subs[1].slice(2).unshift(big);
+                    sub2.unshift(['M', cp[0], cp[1]], temp2);
+                    break;
+                case 'Q':
+                case 'T':
+                case 'S':
+                case 'C':
+                    var t, type2;
+                    if (cur > 0) {
+                        position -= ls[cur - 1];
+  
+                    }
+                    t      = position / (sp[cur].length);
+                    // console.log(t);
+                    subs   = g.cutBezier(pathData, t);
+
+                    if(big == 'Q' || big == 'T') {
+                        type2 = 'Q';
+                    } else {
+                        type2 = 'C';
+                    }
+
+                    temp1  = subs[0].slice(2).unshift(type2);
+                    sub1.push(temp1);
+
+                    temp2  = subs[1].slice(2).unshift(type2);
+                    sub2.unshift(['M', cp[0], cp[1]], temp2);
+            }
+
+            return [sub1, sub2];
         }
     };
 
