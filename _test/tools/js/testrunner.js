@@ -1285,7 +1285,6 @@
             // Although, it's use is not recommended as it can leak assertions
             // to other tests from async tests, because we only get a reference to the current test,
             // not exactly the test where assertion were intended to be called.
-            console.log(currentTest);
             if ( !currentTest ) {
                 throw new Error( "assertion outside test context, in " + sourceFromStacktrace( 2 ) );
             }

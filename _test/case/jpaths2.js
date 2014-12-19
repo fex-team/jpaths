@@ -5,19 +5,15 @@ module( 'case/jpaths' );
 
 test('列表内没有列表标号的项后退', function () {
     define('start1', function(require) {
-<<<<<<< HEAD
-        var jpaths = require('src/jpaths');
-=======
         var jpaths = require('../src/jpaths');
->>>>>>> 3a03b82e695faf2bf541ce798423335b3a34ff62
         var path = jpaths(['m', 0, 0, 'A', 10, 10, 0, 0, 0, 10, 102]);
         window.path = path;
         var x = path.toString();
         console.log(path.toString()); // [['M', 0, 0], ['h', 3], ['v', 4], ['L', 5, 6]]
         setTimeout(function(){
-            equal(x, "m0,0A10,10,0,0,0,10,102", "标记名称1");
+            equal(x, "m0,0A10,10,0,0,0,10,102", "标记名称12");
             start();
-        },50);
+        },100);
     });
     require(['start1'], function() {
         console.log('start');
@@ -27,16 +23,12 @@ test('列表内没有列表标号的项后退', function () {
 
 test('列表内没有列表标号的项后退', function () {
     define('start2', function(require) {
-<<<<<<< HEAD
-        var jpaths = require('src/jpaths');
-=======
         var jpaths = require('../src/jpaths');
->>>>>>> 3a03b82e695faf2bf541ce798423335b3a34ff62
         var path = jpaths(['m', 0, 0, 'A', 10, 10, 0, 0, 0, 10, 10]);
         window.path = path;
         var x = path.toString();
         console.log(path.toString()); // [['M', 0, 0], ['h', 3], ['v', 4], ['L', 5, 6]]
-        equal(x, "m0,0A10,10,0,0,0,10,10", "标记名称1");
+        equal(x, "m0,0A10,10,0,0,0,10,10", "标记名称12");
     });
     require(['start2'], function() {
         console.log('start');
@@ -44,23 +36,19 @@ test('列表内没有列表标号的项后退', function () {
     stop();
     setTimeout(function(){
         var xs = "m0,0A10,10,0,0,0,10,10";
-        equal(xs, "m0,0A10,10,0,0,0,10,10", "标记名称2");
+        equal(xs, "m0,0A10,10,0,0,0,10,10", "标记名称22");
         start();
-    },50);
+    },100);
 });
 
 test('列表内没有列表标号的项后退', function () {
     define('start3', function(require) {
-<<<<<<< HEAD
-        var jpaths = require('src/jpaths');
-=======
         var jpaths = require('../src/jpaths');
->>>>>>> 3a03b82e695faf2bf541ce798423335b3a34ff62
         var path = jpaths(['m', 0, 0, 'A', 10, 10, 0, 0, 0, 10, 10]);
         window.path = path;
         var x = path.toString();
         console.log(path.toString()); // [['M', 0, 0], ['h', 3], ['v', 4], ['L', 5, 6]]
-        equal(x, "m0,0A10,10,0,0,0,10,10", "标记名称1");
+        equal(x, "m0,0A10,10,0,0,0,10,10", "标记名称12");
     });
     require(['start3'], function() {
         console.log('start');
@@ -68,7 +56,7 @@ test('列表内没有列表标号的项后退', function () {
     stop();
     setTimeout(function(){
         var xs = "m0,0A10,10,0,0,0,10,10";
-        equal(xs, "m0,0A10,10,0,0,0,10,10", "标记名称2");
+        equal(xs, "m0,0A10,10,0,0,0,10,10", "标记名称22");
         start();
-    },50);
+    },100);
 });
