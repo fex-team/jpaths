@@ -11,17 +11,13 @@
         }
         svg path {
             position: relative;
+        }
+        svg path:nth-child(odd){
             fill: none;
-            stroke-width: 2px;
-        }
-        svg path:first-child {
-            stroke: #ccc;
-            stroke-width: 10px;
-        }
-        svg path:nth-child(2) {
             stroke: blue;
         }
-        svg path:nth-child(3){
+        svg path:nth-child(even){
+            fill: none;
             stroke: red;
         }
     </style>
@@ -31,12 +27,12 @@
 
 </svg>   
 </body>
-<script src="lib/require.js"></script>
+<script src="../lib/require.js"></script>
 <script>
 
 define('start', function(require) {
 
-    var jpaths = require('src/jpaths');
+    var jpaths = require('../src/jpaths');
     var path;
     var p = {};
     var svg = document.getElementById('svg');
@@ -52,27 +48,33 @@ define('start', function(require) {
         svg.appendChild(obj);//测试初始时的path数据
     }
 
-    function cut(position) {
-        var paths = path.cut(position);//切割路径
-        var obj1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        var obj2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    function append(pathdata) {
+        var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        var totalpath;
 
-        obj1.setAttribute('d', paths[0].toString());
-        obj2.setAttribute('d', paths[1].toString()); 
+        path.append(pathdata);//调用jpaths对象的append()方法
+        totalpath = path.toString();//获取最新的path数据
 
-        setTimeout(function() {
-            svg.appendChild(obj1);
-        }, 400);
-        setTimeout(function() {
-            svg.appendChild(obj2);
-        }, 800);
+        obj.setAttribute('d', totalpath);
+        svg.appendChild(obj);//测试最新的path数据
     }
 
-    init('M50,50c100,100 250,100 350,150');//创建贝赛尔曲线路径
+    init('M50,50l40 50');
 
-    cut(40);
+    var paths = ['v50', 
+            'h100', 
+            ['a', 40, 50, 0, 1, 0, 40, 40], 
+            'l40, 60',
+            'c100,100 250,100 150,100'];
 
-    window.path = path;
+    paths.forEach(function(item, index) {
+        setTimeout(function() {
+            append(item);
+        }, index * 400);
+    });
+
+    p.append = append;
+    window.p = p;//用于外部操作演示
 });
 require(['start'], function() {
     console.log('start');

@@ -16,13 +16,37 @@ define(function(require, exports, module) {
     }
 
     /**
+     * [_fixNum 保留浮点数f后p位小数，去掉多余零]
+     * @param  {[Float]} f [需处理的浮点数]
+     * @param  {[Num]} p   [需保留的小数位数]
+     * @return {[Float]}   [处理后的浮点数]
+     */
+    function _fixNum(f, p) {
+        p = p || 4;
+
+        var m = eval('1e' + p);
+        return Math.round(f * m) / m;
+    }
+
+    /**
      * [pRotate2P 点绕点旋转后的新点<辅助> 暂不暴露]
      * @param  {[Array]} pointArray [中心点和旋转点的坐标集]
      * @param  {[Num]} beta       [逆时针旋转的角度，负值表示顺时针旋转(弧度制)]
+     * @example
+     *
+     *   e1:
+     *   var r = _pRotate2P([0, 0, 1, 0], Math.PI / 4);
+     *   // 返回: [0.7071, 0.7071];
+     *
+     *   e2:
+     *   var r = _pRotate2P([0, 0, 1, 0], -3 * Math.PI / 4);
+     *   // 返回: [-0.7071, -0.7071];   
+     *
      * @return {[Array]}            [新点坐标集]
      */
     function _pRotate2P(pointArray, beta) {
-        var c   = pointArray.slice(0, 2),
+        var fix = _fixNum,
+            c   = pointArray.slice(0, 2),
             m   = pointArray.slice(2, 4),
             dx  = -c[0],// 中心点平移到原点的x位移
             dy  = -c[1],// 中心点平移到原点的y位移
@@ -39,8 +63,8 @@ define(function(require, exports, module) {
         x1  -= dx;// 平移回去
         y1  -= dy;
         
-        x1   = Math.round((x1 - dx) * 10000) / 10000;//保留四位有效数字，去掉多余零
-        y1   = Math.round((y1 - dy) * 10000) / 10000;
+        x1   = fix(x1 - dx);//保留四位有效数字，去掉多余零
+        y1   = fix(y1 - dy);
 
         return [x1, y1];
     }
@@ -51,10 +75,26 @@ define(function(require, exports, module) {
      * @param  {[Num]} rx               [长半轴]
      * @param  {[Num]} ry               [短半轴]
      * @param  {[Num]} x_axis_rotation  [椭圆逆时针旋转的角度，负值为顺，弧度]
+     * @example
+     *
+     *   e1:
+     *   var deg = Math.PI / 4,
+     *       cos = Math.cos(deg), sin = Math.sin(deg),
+     *       rx  = 2, ry  = 1,
+     *       pointArray = [3 - rx * cos,3 - rx * sin,3 - ry * cos,3 + ry * sin, 3 + rx * cos, 3 + rx * sin];
+     *   var a   = _getArcCenter(pointArray, rx, ry, deg); 
+     *   // 返回: [3, 3];
+     *
+     *   e2:
+     *   var pointArray = [-2, 0, 0, 1, 2, 0];
+     *   var a   = _getArcCenter(pointArray, 2, 1, 0); 
+     *   // 返回: [0, 0];
+     *
      * @return {[Array]}                [圆心坐标集]
      */
     function _getArcCenter(arcPointArray, rx, ry, x_axis_rotation) {
-        var ap   = arcPointArray,
+        var fix  = _fixNum,
+            ap   = arcPointArray,
             beta = x_axis_rotation || 0,
             cos  = Math.cos(beta),
             sin  = Math.sin(beta),
@@ -101,9 +141,15 @@ define(function(require, exports, module) {
     /**
      * [_sweepAngular 向量1逆时针旋转至向量2扫过的角度]
      * @param  {[Array]} pointArray [中心点、起点1、终点2的坐标集]
+     * @example
+     *
+     *    var s = _sweepAngular([0,0,-2,0,0,1]); //向量(-2, 0)逆时针转至向量(0,1)扫过的角度
+     *    // 返回: 270
+     *
      * @return {[Num]}              [扫过的角度，角度制]
      */
     function _sweepAngular(pointArray) {
+        var fix = _fixNum;
         var p  = pointArray,
             v1 = [p[2] - p[0], p[3] - p[1]],
             v2 = [p[4] - p[0], p[5] - p[1]],
@@ -123,7 +169,7 @@ define(function(require, exports, module) {
             ang = pi * 2 + ang;
         }
         
-        return Math.round(ang * 18000 / pi) / 100;//保留两位小数
+        return fix(ang * 180 / pi, 2); //保留两位小数
     }
 
     // 1 路径切割，包括切割直线、圆弧、贝塞尔曲线
@@ -154,9 +200,10 @@ define(function(require, exports, module) {
             
             lp.push(ba[0], ba[1]);
             rp.unshift(r[0], r[1]);
+
             for(i = 0; i < n; i++) {
-                x = cut(ba[2 * i], ba[2 * i + 2]);
-                y = cut(ba[2 * i + 1], ba[2 * i + 3]);
+                x = cut(ba[2 * i], ba[2 * i + 2], t);
+                y = cut(ba[2 * i + 1], ba[2 * i + 3], t);
                 p.push(x, y);
             }
             ba = p;
@@ -197,6 +244,7 @@ define(function(require, exports, module) {
     // 
 
     function cutArc(arcArray, cutPoint) {
+        var fix    = _fixNum;
         var aa     = arcArray,
             cp     = cutPoint, //绝对坐标
             sp     = aa.slice(0, 2),//圆弧起点, 绝对坐标
@@ -211,7 +259,7 @@ define(function(require, exports, module) {
 
         if (!lf) {
             sub1 = [sp[0], sp[1], rx, ry, rotate, 0, sf, cp[0], cp[1]];
-            sub2 = [cp[0], cp[1], rx, ry, rotate, 0, sf, ep[0]. ep[1]];
+            sub2 = [cp[0], cp[1], rx, ry, rotate, 0, sf, ep[0], ep[1]];
         } else {
             var arcPointArray = sp.concat(cp, ep),
                 gc   = _getArcCenter,
@@ -222,7 +270,7 @@ define(function(require, exports, module) {
                 lf2  = 1,
                 pointArray, sweepAng1, sweepAng2;
 
-            if (!sf) {
+            if (sf) {
                 pointArray = cent.concat(sp, cp);
                 sweepAng1  = sw(pointArray);
 
@@ -244,7 +292,6 @@ define(function(require, exports, module) {
                 lf2 = 0;
             }
 
-            console.log(sweepAng1, sweepAng2);
             sub1 = [sp[0], sp[1], rx, ry, rotate, lf1, sf, cp[0], cp[1]];
             sub2 = [cp[0], cp[1], rx, ry, rotate, lf2, sf, ep[0], ep[1]];
         }

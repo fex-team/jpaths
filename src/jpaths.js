@@ -15,54 +15,38 @@ define(function(require, exports, module) {
     var utils = require('../utils/utils');
 
     function Path() {
-        var pathString = [].slice.call(arguments).join('');
-
-        this._pathString = pathString ? pathString : 'M0 0';
-        this.pathString = this.toString() || 'M 0 0';
-        this.pathList = this.toArray();
-        this.pathNodeXY = this.pathNodePos();
+        var pathString = [].slice.call(arguments);
+        this.set(pathString);
     }
+
+    Path.prototype.set = function() {
+        var pathString = [].slice.call(arguments).join(',');
+
+        pathString = pathString || 'M0 0';
+        this.pathString = utils.toString({
+            pathString: pathString,
+            opt: 0
+        }); 
+        //toDo 添加异常处理
+    };
+
     Path.prototype.append = function() {
         var pathString = [].slice.call(arguments).join('');
         var pathList2,
-            pathList1 = this.pathList;
+            pathList1 = this.toArray();
         var pathNodeXY2,
-            pathNodeXY = this.pathNodeXY;
+            pathNodeXY = this.pathNodePos();
         var curPos = [].slice.call(pathNodeXY, -1)[0];
         var letter = pathString.charAt(0);
         var big = letter.toUpperCase();
 
-        // toDo 异常处理   
-        if (big === 'H' || big === 'V' || big === 'Z' || letter !== big) {
-            this._pathString += pathString;
-            pathString = 'M' + curPos.x + ',' + curPos.y + pathString;
-            pathString = utils.toString({
-                pathString: pathString,
-                opt: 0
-            });
-            pathList2 = utils.toArray(pathString);
-            pathList2.shift(0);
+        pathString = 'M' + curPos.x + ',' + curPos.y + pathString;
+        pathString = utils.toString({
+            pathString: pathString,
+            opt: 0
+        });
 
-            pathNodeXY2 = utils.pathNodePos(pathString, curPos.x, curPos.y);
-            pathNodeXY2.shift(0);
-
-            this.pathString += pathString.replace(/M\d+\.?\d+,\d+\.?\d+/, '');
-        } else {
-            this._pathString += pathString;
-            this.pathString += utils.toString({
-                pathString: pathString,
-                opt: 0
-            });
-            pathList2 = utils.toArray(pathString);
-
-            pathNodeXY2 = utils.pathNodePos(pathString, curPos.x, curPos.y);
-            if( big !== 'M') {
-                pathNodeXY2.shift();
-            }
-        }
-
-        this.pathList = pathList1.concat(pathList2);
-        this.pathNodeXY = pathNodeXY.concat(pathNodeXY2);
+        this.pathString += pathString.replace(/M\d+\.?\d+,\d+\.?\d+/, '');
     };
     Path.prototype.toString = function() {
         var args = [].slice.call(arguments);
@@ -73,13 +57,13 @@ define(function(require, exports, module) {
         var result;
 
         return utils.toString({
-                    pathString: this._pathString,
+                    pathString: this.pathString,
                     opt: opt
                 });
     };
     Path.prototype.toArray = Path.prototype.valueOf = function() {
-        var _pathString = this._pathString;
-        return utils.toArray(_pathString);
+        var pathString = this.pathString;
+        return utils.toArray(pathString);
     };
     Path.prototype.toRelative = function() {
         var pathString = this.pathString;
@@ -117,7 +101,9 @@ define(function(require, exports, module) {
         var ls   = this.lengthes();
         var pl   = this.toArray();
         var cp   = this.at(position);
-        var subs = utils.cut(sp, ls, pl, position, cp.point);
+        var subs;
+        
+        subs = utils.cut(sp, ls, pl, position, cp.point);
 
         return [new Path(subs[0]),
                 new Path(subs[1])

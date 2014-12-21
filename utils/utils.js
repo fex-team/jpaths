@@ -6,20 +6,21 @@ define(function(require, exports, module) {
             return Math.sqrt(Math.pow(x1- x2, 2) + Math.pow(y1 - y2, 2));
         },
         toString: function(dataopt) {
-            var path = dataopt.pathString;
+            var path0 = dataopt.pathString;
             var opt = dataopt.opt;
-            var result;
+            var path, result;
 
-            path = path.replace(/(\d+\.?\d+|[a-z])\s*,?\s*/gim, '$1,').replace(/,$/gm, '');
+            console.log(path0);
+            path = path0.replace(/(\d+\.?\d*|[a-z])\s*,?\s*/gim, '$1,').replace(/,$/gm, '');
             switch (opt) {
                 case 0:
-                    result = path.replace(/\s*,?\s*([a-z])\s*,?\s*/gi, '$1');
+                    result = path.replace(/\s*,?\s*([a-z])\s*,?\s*/gim, '$1');
                     break;
                 case 1:
-                    result = path.replace(/,/g, ' ').replace(/(\d+\.?\d+)\s(\d+\.?\d+)(?=\s[a-z]|$)/gim, '$1,$2');
+                    result = path.replace(/,/g, ' ').replace(/(\d+\.?\d*)\s(\d+\.?\d*)(?=\s[a-z]|$)/gim, '$1,$2');
                     break;
                 case 2:
-                    result = path.replace(/,/g, ' ').replace(/(\d+\.?\d+)\s(\d+\.?\d+)(?=\s[a-z]|$)/gim, '$1,$2').replace(/\s([a-z])/gi, '\n$1');
+                    result = path.replace(/,/g, ' ').replace(/(\d+\.?\d*)\s(\d+\.?\d*)(?=\s[a-z]|$)/gim, '$1,$2').replace(/\s([a-z])/gim, '\n$1');
                     break;
                 default:
                     console.log('unkown type of toString');
@@ -330,7 +331,7 @@ define(function(require, exports, module) {
                     var length;
 
                     length = utils.pathLength(pathString2, start[0], start[1]);
-                    length = Math.round(length * 10000) / 10000; 
+                    // length = Math.round(length * 10000) / 10000; 
 
                     subs.push({pathString: pathString2, type: type, index: index, count: count++, pathData: data, startPoint: start, endPoint: end, length: length});
                 }
@@ -376,9 +377,9 @@ define(function(require, exports, module) {
 
                 rotate = (Math.abs(p2.x - p1.x) > precision) ? Math.atan((p2.y - p1.y) / (p2.x - p1.x)) :
                     (p2.y > p1.y) ? Math.PI * 0.5 : -Math.PI * 0.5;
-                tangent = [Math.cos(rotate).toFixed(3), Math.sin(rotate).toFixed(3)];
-                rotate = rotate.toFixed(4);
-                point = [p.x.toFixed(3), p.y.toFixed(3)];
+                tangent = [Math.cos(rotate), Math.sin(rotate)];
+                rotate = rotate;
+                point = [p.x, p.y];
 
                 return {
                     point: point,
@@ -395,7 +396,6 @@ define(function(require, exports, module) {
                 cp = cutPoint,
                 n  = ls.length;
 
-            console.log(arguments);
             if (position < 0 || position > ls[n - 1]) {
                 return;
             } 
@@ -425,7 +425,7 @@ define(function(require, exports, module) {
             }
 
             sub1  = pl.slice(0, index);
-            sub2  = pl.slice(index);
+            sub2  = pl.slice(index + 1);
 
             start = item.startPoint.slice(0);
             end   = item.endPoint.slice(0);
@@ -443,7 +443,7 @@ define(function(require, exports, module) {
                     (big == 'T' && type1 == 'Q');//严格需向前考察
 
                 if (flag) {
-                    pd1   = item1.pathData.slice(-4, 2);
+                    pd1   = item1.pathData.slice(-4, -2);
                     hx    = 2 * start[0] - pd1[0];
                     hy    = 2 * start[1] - pd1[1];
                     pathData.unshift(hx, hy);
@@ -453,7 +453,6 @@ define(function(require, exports, module) {
             }
       
             pathData.unshift(start[0], start[1]);
-            console.log(pathData);
 
             var temp1, temp2;
             switch(big) {
@@ -466,10 +465,12 @@ define(function(require, exports, module) {
                 case 'A':
                     subs = g.cutArc(pathData, cp);
 
-                    temp1 = subs[0].slice(2).unshift(big);
+                    temp1 = subs[0].slice(2);
+                    temp1.unshift(big);
                     sub1.push(temp1);
 
-                    temp2 = subs[1].slice(2).unshift(big);
+                    temp2 = subs[1].slice(2);
+                    temp2.unshift(big);
                     sub2.unshift(['M', cp[0], cp[1]], temp2);
                     break;
                 case 'Q':
@@ -482,8 +483,9 @@ define(function(require, exports, module) {
   
                     }
                     t      = position / (sp[cur].length);
-                    // console.log(t);
+
                     subs   = g.cutBezier(pathData, t);
+                    console.log(subs);
 
                     if(big == 'Q' || big == 'T') {
                         type2 = 'Q';
@@ -491,11 +493,15 @@ define(function(require, exports, module) {
                         type2 = 'C';
                     }
 
-                    temp1  = subs[0].slice(2).unshift(type2);
+                    temp1  = subs[0].slice(2);
+                    temp1.unshift(type2);
                     sub1.push(temp1);
 
-                    temp2  = subs[1].slice(2).unshift(type2);
-                    sub2.unshift(['M', cp[0], cp[1]], temp2);
+                    temp2  = subs[1].slice(2);
+                    temp2.unshift(type2);
+
+                    var pos1 = subs[1].slice(0, 2);
+                    sub2.unshift(['M', pos1[0], pos1[1]], temp2);
             }
 
             return [sub1, sub2];

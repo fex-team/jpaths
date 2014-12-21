@@ -31,12 +31,12 @@
 
 </svg>   
 </body>
-<script src="lib/require.js"></script>
+<script src="../lib/require.js"></script>
 <script>
 
 define('start', function(require) {
 
-    var jpaths = require('src/jpaths');
+    var jpaths = require('../src/jpaths');
     var path;
     var p = {};
     var svg = document.getElementById('svg');
@@ -71,8 +71,6 @@ define('start', function(require) {
     init('M50,50c100,100 250,100 350,150');//创建贝赛尔曲线路径
 
     cut(40);
-
-    window.path = path;
 });
 require(['start'], function() {
     console.log('start');
