@@ -40,8 +40,9 @@ define('start', function(require) {
     var path;
     var p = {};
     var svg = document.getElementById('svg');
-    var step = 300;
+    var step = 600;
     var i = 1;
+    var lens;
 
     function init(pathdata) {
         var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -54,35 +55,38 @@ define('start', function(require) {
         svg.appendChild(obj);//测试初始时的path数据
     }
 
-    function cut(pathdata, position) {
+    function cut(position, i) {
         var paths;//切割路径
         var obj1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         var obj2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-        init(pathdata);//创建贝赛尔曲线路径
         paths = path.cut(position);
         obj1.setAttribute('d', paths[0].toString());
         obj2.setAttribute('d', paths[1].toString()); 
 
         setTimeout(function() {
             svg.appendChild(obj1);
-        }, i++ * step);
+        }, 3 * i * step);
         setTimeout(function() {
             svg.appendChild(obj2);
-        }, i++ * step);
+        }, (3 * i + 1) * step);
 
         setTimeout(function() {
-            while (svg.lastChild) {
-                svg.removeChild(svg.lastChild);
-            }
-        }, i * step);
+            svg.removeChild(obj2);
+            svg.removeChild(obj1);
+        }, (3 * i + 2) * step);
     }
 
-    cut('M150,150 a100,60 -30 1,0 30, 60', 260);
+    init('M20,30l50 60c-50,80 150,150 180,100l70, -60a50, 80 -30 1,1 50,60 l 50, 60 c60,60 150,100 -150,80');
 
-    setTimeout(function() {
-        cut('M150,150 a100,60 60 1,1 30, 60', 100);
-    }, i * step);
+    
+    lens = path.lengthes();
+
+    cut(lens[0] * 0.4, 0);
+
+    for(i = 1; i < lens.length; i++) {
+        cut(lens[i] - 60, i);
+    }
 
     window.path = path;
 });

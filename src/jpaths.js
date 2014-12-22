@@ -109,6 +109,32 @@ define(function(require, exports, module) {
                 new Path(subs[1])
             ];
     };
+    Path.prototype.sub = function(position, length) {
+        var sp   = this.subPathes();
+        var ls   = this.lengthes();
+        var pl   = this.toArray();
+        var cp   = this.at(position);
+        var len;
+        var subs, cur, i, item;
+        
+        for(i = 0; i < n && !stop; i++) {
+            if (ls[i] >= position) {
+                cur  = i;
+                stop = !stop;
+            }
+        }
+
+        if (length) {
+            len = position + length;
+        } else {
+            len = !cur ? ls[0] : ls[cur] - ls[cur - 1];
+        }
+        item  = sp[cur];
+        index = item.index;
+
+        subs = utils.cut(sp, ls, pl, position, cp.point);
+    };
+
     module.exports = function(path) {
         return new Path(path);
     };

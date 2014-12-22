@@ -94,7 +94,7 @@ define('start', function(require) {
         var p2 = arcpathdata[1].slice(-2);
         var ap = arcpathdata[1].slice(1);
         var arcPointArray = p0.concat(p1, p2);
-        var cent = _getArcCenter(arcPointArray, ap[0], ap[1], ap[2]);
+        var cent = _getArcCenter(arcPointArray, ap[0], ap[1], ap[2] * Math.PI / 180);
         var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
 
         while (svg.lastChild) {
@@ -115,9 +115,17 @@ define('start', function(require) {
         window.path = path;
     }
 
-    test([['M', 100, 100], ['A', 120, 60, 0,  0, 1, 350, 325]]);
+    test([['M', 100, 100], ['A', 120, 60, 60,  1, 0, 350, 325]]);
 
-         // test([['M', 100, 100], ['A', 120, 60, -60,  1, 1, 150, 225]]);
+    setTimeout(function() {
+        test([['M', 100, 100], ['A', 120, 60, 60,  1, 1, 350, 325]]);
+    }, 1000);
+    setTimeout(function() {
+        test([['M', 100, 100], ['A', 120, 60, -60,  0, 1, 150, 325]]);
+    }, 2000);
+    setTimeout(function() {
+        test([['M', 100, 100], ['A', 120, 60, -60,  0, 0, 150, 325]]);
+    }, 3000);
 
 });
 

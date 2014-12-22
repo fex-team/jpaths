@@ -358,34 +358,35 @@ define(function(require, exports, module) {
 
             if (position < 0 || position > totalLength) {
                 alert('position is not in range of the path length');
-            } else {
-                var precision = 1e-6, dl = 0.5;
-                var p, p1, p2, position1, position2;
-                var rotate, tangent, point;
-
-                p = path.getPointAtLength(position);
-
-                position1 = Math.max(position - dl, 0);
-                p1 = path.getPointAtLength(position1);
-                // 判断是否为断点
-                p1 = (dl >= Math.sqrt(Math.pow(p1.x - p.x, 2) + Math.pow(p1.y - p.y, 2))) ? p1 : p;
-
-                position2 = Math.min(position + dl, totalLength);
-                p2 = path.getPointAtLength(position2);
-                p2 = (dl >= Math.sqrt(Math.pow(p2.x - p.x, 2) + Math.pow(p2.y - p.y, 2))) ? p2 : p;
-
-                rotate = (Math.abs(p2.x - p1.x) > precision) ? Math.atan((p2.y - p1.y) / (p2.x - p1.x)) :
-                    (p2.y > p1.y) ? Math.PI * 0.5 : -Math.PI * 0.5;
-                tangent = [Math.cos(rotate), Math.sin(rotate)];
-                rotate = rotate;
-                point = [p.x, p.y];
-
-                return {
-                    point: point,
-                    tangent: tangent,
-                    rotate: rotate
-                };
+                return;
             }
+   
+            var precision = 1e-6, dl = 0.5;
+            var p, p1, p2, position1, position2;
+            var rotate, tangent, point;
+
+            p = path.getPointAtLength(position);
+
+            position1 = Math.max(position - dl, 0);
+            p1 = path.getPointAtLength(position1);
+            // 判断是否为断点
+            p1 = (dl >= Math.sqrt(Math.pow(p1.x - p.x, 2) + Math.pow(p1.y - p.y, 2))) ? p1 : p;
+
+            position2 = Math.min(position + dl, totalLength);
+            p2 = path.getPointAtLength(position2);
+            p2 = (dl >= Math.sqrt(Math.pow(p2.x - p.x, 2) + Math.pow(p2.y - p.y, 2))) ? p2 : p;
+
+            rotate = (Math.abs(p2.x - p1.x) > precision) ? Math.atan((p2.y - p1.y) / (p2.x - p1.x)) :
+                (p2.y > p1.y) ? Math.PI * 0.5 : -Math.PI * 0.5;
+            tangent = [Math.cos(rotate), Math.sin(rotate)];
+            rotate = rotate;
+            point = [p.x, p.y];
+
+            return {
+                point: point,
+                tangent: tangent,
+                rotate: rotate
+            };
         },
         cut: function(subPathes, lengthes, pathList, position, cutPoint) {
             var sp = subPathes.slice(0),
