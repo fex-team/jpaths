@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>jpaths</title>
+    <style stylesheet="text/css">
+        svg {
+            width: 500px;
+            height: 500px;
+            border: 1px solid #ccc;
+        }
+        svg path {
+            position: relative;
+            fill: none;
+            stroke-width: 2px;
+        }
+        svg path:first-child {
+            stroke: #ccc;
+            stroke-width: 6px;
+        }
+        svg path:nth-child(2) {
+            stroke: blue;
+        }
+        svg path:nth-child(3){
+            stroke: red;
+        }
+    </style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="svg">
+
+</svg>   
+</body>
+<script src="../lib/require.js"></script>
+<script>
+
+define('start', function(require) {
+    function _getArcCenter(arcPointArray, rx, ry, x_axis_rotation) {//取自geometry.js
+        var ap   = arcPointArray,
+            beta = x_axis_rotation || 0,
+            cos  = Math.cos(beta),
+            sin  = Math.sin(beta),
+            x1   = ap[0],
+            y1   = ap[1],
+            x2   = ap[2],
+            y2   = ap[3],
+            x3   = ap[4],
+            y3   = ap[5], 
+            k    = rx * rx / (ry * ry), 
+            m1, m2, a, b, c, c10, c11, c20, c21, c1, c0, t;
+            
+        //求第一组参数
+        c10 = x1 * cos + y1 * sin;
+        c11 = y1 * cos - x1 * sin;
+        c20 = x2 * cos + y2 * sin;
+        c21 = y2 * cos - x2 * sin;
+        c0  = c10 - c20;
+        c1  = c11 - c21;
+
+        a = k * c1 * sin - c0 * cos;
+        b = -k * c1 * cos - c0 * sin;
+        c = -0.5 * (c0 * (c10 + c20) + k * c1 * (c11 + c21));
+        m1= [a, b, c];
+
+        //求第二组参数
+        c20 = x3 * cos + y3 * sin;
+        c21 = y3 * cos - x3 * sin;
+        c0  = c10 - c20;
+        c1  = c11 - c21;
+
+        a = k * c1 * sin - c0 * cos;
+        b = -k * c1 * cos - c0 * sin;
+        c = -0.5 * (c0 * (c10 + c20) + k * c1 * (c11 + c21));
+        m2= [a, b, c];
+
+        t = m1[0] * m2[1] - m2[0] * m1[1];
+        x = (m1[2] * m2[1] - m2[2] * m1[1]) / t;
+        y = (-m1[2] * m2[0] + m2[2] * m1[0]) / t;
+
+        return [x, y];
+    }
+
+    var jpaths = require('../src/jpaths');
+    var svg = document.getElementById('svg');
+    var i = 0, step = 600;
+
+    function test(arcpathdata) {//用数组的形式测试
+        var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        var path = jpaths(arcpathdata);//创建jpaths对象
+        var length = path.length();
+        var p = path.at(0.5 * length);
+        var p0 = arcpathdata[0].slice(1);
+        var p1 = p.point;
+        var p2 = arcpathdata[1].slice(-2);
+        var ap = arcpathdata[1].slice(1);
+        var arcPointArray = p0.concat(p1, p2);
+        var cent = _getArcCenter(arcPointArray, ap[0], ap[1], ap[2]);
+        var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+
+        while (svg.lastChild) {
+            svg.removeChild(svg.lastChild);
+        }
+
+        initpath = path.toString();//获取jpaths对象的path数据
+        obj.setAttribute('d', initpath);
+        svg.appendChild(obj);//测试初始时的path数据
+
+        circle.setAttribute('cx', cent[0]);
+        circle.setAttribute('cy', cent[1]);
+        circle.setAttribute('r', '4');
+        circle.setAttribute('fill', 'red');
+
+        svg.appendChild(circle);
+
+        window.path = path;
+    }
+
+    test([['M', 100, 100], ['A', 120, 60, 0,  0, 1, 350, 325]]);
+
+         // test([['M', 100, 100], ['A', 120, 60, -60,  1, 1, 150, 225]]);
+
+});
+
+require(['start'], function() {
+    console.log('start');
+});
+</script>
+</html>

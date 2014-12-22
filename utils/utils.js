@@ -10,7 +10,6 @@ define(function(require, exports, module) {
             var opt = dataopt.opt;
             var path, result;
 
-            console.log(path0);
             path = path0.replace(/(\d+\.?\d*|[a-z])\s*,?\s*/gim, '$1,').replace(/,$/gm, '');
             switch (opt) {
                 case 0:
