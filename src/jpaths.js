@@ -82,9 +82,8 @@ define(function(require, exports, module) {
         return utils.pathLength(pathString, 0, 0);
     };
     Path.prototype.subPathes = function() {
-        var pathList = this.toArray();
-        var pathNodeXY = this.pathNodePos();
-        return utils.subPathes(pathList, pathNodeXY);
+        var pathString = this.pathString;
+        return utils.subPathes(pathString);
     };
     Path.prototype.lengthes = function() {
         // 用于获取第一段子路径，前两段子路径，..., 直到所有子路径的长度
@@ -97,42 +96,20 @@ define(function(require, exports, module) {
         return utils.at(pathString, position);
     };
     Path.prototype.cut = function(position) {
-        var sp   = this.subPathes();
-        var ls   = this.lengthes();
-        var pl   = this.toArray();
-        var cp   = this.at(position);
+        var pathString = this.pathString;
         var subs;
         
-        subs = utils.cut(sp, ls, pl, position, cp.point);
+        subs = utils.cut(pathString, position);
 
         return [new Path(subs[0]),
                 new Path(subs[1])
             ];
     };
     Path.prototype.sub = function(position, length) {
-        var sp   = this.subPathes();
-        var ls   = this.lengthes();
-        var pl   = this.toArray();
-        var cp   = this.at(position);
-        var len;
-        var subs, cur, i, item;
-        
-        for(i = 0; i < n && !stop; i++) {
-            if (ls[i] >= position) {
-                cur  = i;
-                stop = !stop;
-            }
-        }
+        var pathString = this.pathString;
+        var sub = utils.sub(pathString, position, length);
 
-        if (length) {
-            len = position + length;
-        } else {
-            len = !cur ? ls[0] : ls[cur] - ls[cur - 1];
-        }
-        item  = sp[cur];
-        index = item.index;
-
-        subs = utils.cut(sp, ls, pl, position, cp.point);
+        return new Path(sub);
     };
 
     module.exports = function(path) {

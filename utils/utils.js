@@ -289,10 +289,12 @@ define(function(require, exports, module) {
 
             return path.getTotalLength();
         },
-        subPathes: function(pathList, pathNodeXY) {
+        subPathes: function(pathString) {
             //用于获取路径的子路径
             var subs = [];
             var type, big, count = 0;
+            var pathNodeXY = utils.pathNodePos(pathString);
+            var pathList = utils.toArray(pathString);
             var x = pathNodeXY[0].x, y = pathNodeXY[0].y;
 
             pathList.forEach(function(item, index) {
@@ -388,21 +390,21 @@ define(function(require, exports, module) {
                 rotate: rotate
             };
         },
-        cut: function(subPathes, lengthes, pathList, position, cutPoint) {
-            var sp = subPathes.slice(0),
-                ls = lengthes.slice(0),
-                pl = pathList.slice(0),
-                po = position,
-                cp = cutPoint,
-                n  = ls.length;
+        cut: function(pathString, position) {
+            var sp = utils.subPathes(pathString);
+            var ls = utils.lengthes(sp);
+            var pl = utils.toArray(pathString);
+            var p0 = position;
+            var cp = utils.at(pathString, position).point;
+            var n = ls.length;
 
             if (position < 0 || position > ls[n - 1]) {
                 return;
             } 
 
             var stop   = false,
-                pathString,
-                i, cur, index, type, big, pathData, start, item,
+                pathString1,
+                i, cur = 0, index, type, big, pathData, start, item,
                 sub1, sub2, subs;
 
             for(i = 0; i < n && !stop; i++) {
@@ -418,8 +420,8 @@ define(function(require, exports, module) {
             big   = type.toUpperCase();
 
             if (type !== big) {
-                pathString = utils.toAbsolute(item.pathString);
-                pathData   = utils.toArray(pathString)[1].slice(1);
+                pathString1 = utils.toAbsolute(item.pathString);
+                pathData   = utils.toArray(pathString1)[1].slice(1);
             } else {
                 pathData   = item.pathData;
             }
@@ -485,7 +487,6 @@ define(function(require, exports, module) {
                     t      = position / (sp[cur].length);
 
                     subs   = g.cutBezier(pathData, t);
-                    console.log(subs);
 
                     if(big == 'Q' || big == 'T') {
                         type2 = 'Q';
@@ -505,6 +506,34 @@ define(function(require, exports, module) {
             }
 
             return [sub1, sub2];
+        },
+        sub: function(pathString, position, length) {
+            var sp = utils.subPathes(pathString);
+            var ls = utils.lengthes(sp);
+            var position1, subs, subs1, pathString1;
+
+            if (length) {
+                position1 = Math.min(position + length, ls.slice(-1)[0]);
+            } else {
+                var n = ls.length;
+                var stop = false, i, cur;
+
+                for(i = 0; i < n && !stop; i++) {
+                    if (ls[i] >= position) {
+                        cur  = i;
+                        stop = !stop;
+                    }
+                }
+
+                position1 = ls[cur];
+            }
+
+            subs = utils.cut(pathString, position1);
+
+            pathString1 = utils.toString({pathString: subs[0].toString(), opt: 0});
+            sub1 = utils.cut(pathString1, position);
+
+            return sub1[1];
         }
     };
 
