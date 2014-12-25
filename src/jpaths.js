@@ -31,22 +31,27 @@ define(function(require, exports, module) {
     };
 
     Path.prototype.append = function() {
-        var pathString = [].slice.call(arguments).join('');
-        var pathList2,
-            pathList1 = this.toArray();
-        var pathNodeXY2,
-            pathNodeXY = this.pathNodePos();
-        var curPos = [].slice.call(pathNodeXY, -1)[0];
-        var letter = pathString.charAt(0);
-        var big = letter.toUpperCase();
+        // var pathString = [].slice.call(arguments).join('');
+        // var pathList2,
+        //     pathList1 = this.toArray();
+        // var pathNodeXY2,
+        //     pathNodeXY = this.pathNodePos();
+        // var curPos = [].slice.call(pathNodeXY, -1)[0];
+        // var letter = pathString.charAt(0);
+        // var big = letter.toUpperCase();
 
-        pathString = 'M' + curPos.x + ',' + curPos.y + pathString;
-        pathString = utils.toString({
-            pathString: pathString,
-            opt: 0
-        });
+        // pathString = 'M' + curPos.x + ',' + curPos.y + pathString;
+        // pathString = utils.toString({
+        //     pathString: pathString,
+        //     opt: 0
+        // });
 
-        this.pathString += pathString.replace(/M\d+\.?\d+,\d+\.?\d+/, '');
+        // this.pathString += pathString.replace(/M\d+\.?\d+,\d+\.?\d+/, '');
+        var pathString1 = [].slice.call(arguments).toString();
+        var pathString  = this.pathString;
+
+        this.set(pathString, pathString1);
+        // 添加异常处理;
     };
     Path.prototype.toString = function() {
         var args = [].slice.call(arguments);
@@ -87,6 +92,7 @@ define(function(require, exports, module) {
     };
     Path.prototype.lengthes = function() {
         // 用于获取第一段子路径，前两段子路径，..., 直到所有子路径的长度
+        // var pathString = this.pathString;
         var subPathes = this.subPathes();
         return utils.lengthes(subPathes);
     };
@@ -111,10 +117,15 @@ define(function(require, exports, module) {
 
         return new Path(sub);
     };
+    Path.prototype.toNormalized = function() {
+        var pathString = this.pathString;
+        var path = utils.toNormalized(pathString);
+        
+        return new Path(path);
+    };
 
     module.exports = function(path) {
         return new Path(path);
     };
-    window.utils = utils;
 
 });

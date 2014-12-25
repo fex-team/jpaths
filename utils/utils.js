@@ -534,6 +534,95 @@ define(function(require, exports, module) {
             sub1 = utils.cut(pathString1, position);
 
             return sub1[1];
+        },
+        toNormalized: function(pathString) {
+            var pathString1 = utils.toAbsolute(pathString);//先转化为绝对路径
+            var subPathes = utils.subPathes(pathString1);
+            var path = [];
+            var x0, y0, preType, x2, y2, c2;
+
+            subPathes.forEach(function(item, index) {
+                var type = item.type;
+                var start = item.startPoint;
+                var end = item.endPoint;
+                var pd = item.pathData;
+                var x1, y1, cubic;
+
+                if (x0 !== start[0] || y0 !== start[1]) {
+                    x0 = start[0];
+                    y0 = start[1];
+                    path.push(['M', x0, y0]);
+                    preType = 'M';
+                }
+
+                switch(type) {
+                    case 'L':
+                    case 'C':
+                    case 'Z':
+                        path.push([type].concat(pd));
+                        preType = type;
+                        break;
+                    case 'H':
+                    case 'V':
+                        path.push(['L'].concat(end));
+                        preType = 'L';
+                        break;
+                    case 'Q':
+                        cubic = upgradeBezier(start.concat(pd), 3);
+                        c2 = cubic.slice(-2);
+                        path.push(['C'].concat(cubic.slice(2)));
+                        preType = 'Q';//后边跟T时有用
+                        x2 = c2[0];
+                        y2 = c2[1];
+                        break;
+                    case 'S':
+                        if (preType === 'C') {
+                            x1 = 2 * x0 - x2;
+                            y1 = 2 * y0 - y2;
+                        } else {
+                            x1 = x0;
+                            y1 = y0;
+                        }
+                        path.push(['C', x1, y1].concat(pd));
+                        preType = 'C';
+                        break;
+                    case 'T':
+                        if (preType === 'Q') {
+                            x1 = 2 * x0 - x2;
+                            y1 = 2 * y0 - y2;
+                        } else {
+                            x1 = x0;
+                            y1 = y0;
+                        }
+                        cubic = upgradeBezier(start.concat(x1, y1).concat(pd), 3);
+                        c2 = cubic.slice(-2);
+                        path.push(['C'].concat(cubic.slice(2)));
+                        preType = 'Q';//后边跟T时有用
+                        x2 = c2[0];
+                        y2 = c2[1];
+                        break;
+                    case 'A':
+                        cubic = g.arc2curv(start.concat(pd));
+                        var cubics = [];
+                        var i;
+                        for (i = 0;i < cubic.length / 6; i ++) {
+                            cubics.push(cubic.slice(i * 6, (i + 1) * 6));
+                        }
+
+                        cubics.forEach(function(cubic, i) {
+                            path.push(['C'].concat(cubic));
+                        });
+                        break;
+                    default:
+                        console.log('unkown path command');
+                        break;
+                }
+
+                x0 = end[0];
+                y0 = end[1];
+            });
+            console.log(path);
+            return path;
         }
     };
 
