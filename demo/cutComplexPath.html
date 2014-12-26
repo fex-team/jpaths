@@ -40,9 +40,10 @@ define('start', function(require) {
     var path;
     var p = {};
     var svg = document.getElementById('svg');
-    var step = 600;
+    var step = 1000;
     var i = 1;
     var lens;
+    var n;
 
     function init(pathdata) {
         var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -50,9 +51,13 @@ define('start', function(require) {
 
         path = jpaths(pathdata);//创建jpaths对象
 
-        initpath = path.toString();//获取jpaths对象的path数据
+        initpath = path.toString('%n');//获取jpaths对象的path数据
         obj.setAttribute('d', initpath);
         svg.appendChild(obj);//测试初始时的path数据
+
+        console.log('');
+        console.log('初始化一条路径，包括直线、贝赛尔曲线、椭圆弧：' + '\n');
+        console.log(initpath);
     }
 
     function cut(position, i) {
@@ -61,8 +66,8 @@ define('start', function(require) {
         var obj2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
         paths = path.cut(position);
-        obj1.setAttribute('d', paths[0].toString());
-        obj2.setAttribute('d', paths[1].toString()); 
+        obj1.setAttribute('d', paths[0].toString('%n'));
+        obj2.setAttribute('d', paths[1].toString('%n')); 
 
         setTimeout(function() {
             svg.appendChild(obj1);
@@ -71,20 +76,29 @@ define('start', function(require) {
             svg.appendChild(obj2);
         }, (3 * i + 1) * step);
 
-        setTimeout(function() {
-            svg.removeChild(obj2);
-            svg.removeChild(obj1);
-        }, (3 * i + 2) * step);
+        if (i !== n - 1) {
+            setTimeout(function() {
+                svg.removeChild(obj2);
+                svg.removeChild(obj1);
+            }, (3 * i + 2) * step);
+        }
+  
+
+        console.log('');
+        console.log('在第 ' + i + ' 个位置切割路径的结果：\n\n');
+        console.log('1) 第一段子路径 \n' + paths[0].toString('%n'));
+        console.log('2) 第二段子路径 \n' + paths[1].toString('%n'));
     }
 
     init('M20,30l50 60c-50,80 150,150 180,100l70, -60a50, 80 -30 1,1 50,60 l 50, 60 c60,60 150,100 -150,80');
 
     
     lens = path.lengthes();
+    n = lens.length;
 
     cut(lens[0] * 0.4, 0);
 
-    for(i = 1; i < lens.length; i++) {
+    for(i = 1; i < n; i++) {
         cut(lens[i] - 60, i);
     }
 

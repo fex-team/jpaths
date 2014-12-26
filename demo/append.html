@@ -36,6 +36,7 @@ define('start', function(require) {
     var path;
     var p = {};
     var svg = document.getElementById('svg');
+    var i = 1;
 
     function init(pathdata) {
         var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -43,9 +44,11 @@ define('start', function(require) {
 
         path = jpaths(pathdata);//创建jpaths对象
 
-        initpath = path.toString();//获取jpaths对象的path数据
+        initpath = path.toString('%n');//获取jpaths对象的path数据
         obj.setAttribute('d', initpath);
         svg.appendChild(obj);//测试初始时的path数据
+
+        console.log('初始路径：\n', initpath);
     }
 
     function append(pathdata) {
@@ -57,6 +60,9 @@ define('start', function(require) {
 
         obj.setAttribute('d', totalpath);
         svg.appendChild(obj);//测试最新的path数据
+
+        console.log(i++ + ') path.append("' + pathdata + '")之后的路径：\n');
+        console.log(path.toString('%n'));
     }
 
     init('M50,50l40 50');
@@ -75,9 +81,10 @@ define('start', function(require) {
 
     p.append = append;
     window.p = p;//用于外部操作演示
+    window.path = path;
 });
 require(['start'], function() {
-    console.log('start');
+   
 });
 </script>
 </html>

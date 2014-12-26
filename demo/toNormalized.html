@@ -14,15 +14,15 @@
             fill: none;
             stroke-width: 2px;
         }
+        svg path:nth-child(odd) {
+            stroke: red;
+        }
+        svg path:nth-child(even){
+            stroke: yellow;
+        }
         svg path:first-child {
             stroke: #ccc;
             stroke-width: 6px;
-        }
-        svg path:nth-child(2) {
-            stroke: blue;
-        }
-        svg path:nth-child(3){
-            stroke: red;
         }
     </style>
 </head>
@@ -38,11 +38,7 @@ define('start', function(require) {
 
     var jpaths = require('../src/jpaths');
     var path;
-    var p = {};
     var svg = document.getElementById('svg');
-    var step = 600;
-    var i = 1;
-    var lens;
 
     function init(pathdata) {
         var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -55,45 +51,50 @@ define('start', function(require) {
         svg.appendChild(obj);//测试初始时的path数据
 
         console.log('');
-        console.log('初始时的路径：\n' + initpath);
+        console.log('测试的路径为：');
+        console.log(initpath);
     }
 
-    function sub(position, i) {
-        var subPath;//取子路径
-        var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    function test(pathdata) {
+        init(pathdata);
+        var subs = path.subPathes();
+        var subs1 = path.toNormalized().subPathes();
+        var n = subs.length;
 
-        subPath = path.sub(position, 120);
-        obj.setAttribute('d', subPath.toString('%n'));
+        subs.forEach(function(sub, i) {
+            var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-        setTimeout(function() {
+            obj.setAttribute('d', sub.pathString);
             svg.appendChild(obj);
-        }, 2 * i * step);
+        });
+
         setTimeout(function() {
-            svg.removeChild(obj);
-        }, (2 * i + 1) * step);
+            while(n-- > 0) {
+                svg.removeChild(svg.lastChild);
+            }
+        }, 1200);
+
+        setTimeout(function() {
+            subs1.forEach(function(sub, i) {
+                var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+                obj.setAttribute('d', sub.pathString);
+                svg.appendChild(obj);
+            });
+        }, 2400);
 
         console.log('');
-        console.log('第 ' + i + ' 次随意截取的子路径：');
-        console.log(subPath.toString('%n'));
+        console.log('规范化后的路径为：');
+        console.log(path.toNormalized().toString('%n'));
     }
 
-    init('M20,30l50 60c-50,80 150,150 180,100l70, -60a50, 80 -30 1,1 50,60 l 50, 60 c60,60 150,100 -150,80');
-
-    
-    lens = path.lengthes();
-
-    sub(lens[0] * 0.4, 0);
-
-    for(i = 1; i < lens.length; i++) {
-        sub((lens[i] + lens[i -1]) * 0.4, i);
-    }
-
+    test("M50,50v50h70c80,200,150,200,100,10q50 60 80 70t80,90");
     window.path = path;
+    window.svg = svg;
 });
 
-window.svg = svg;
 require(['start'], function() {
-   
+    
 });
 </script>
 </html>

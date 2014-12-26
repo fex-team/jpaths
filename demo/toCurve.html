@@ -16,7 +16,7 @@
         }
         svg path:first-child {
             stroke: #ccc;
-            stroke-width: 10px;
+            stroke-width: 6px;
         }
         svg path:nth-child(2) {
             stroke: blue;
@@ -40,6 +40,8 @@ define('start', function(require) {
     var path;
     var p = {};
     var svg = document.getElementById('svg');
+    var step = 300;
+    var i = 1;
 
     function init(pathdata) {
         var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -52,33 +54,33 @@ define('start', function(require) {
         svg.appendChild(obj);//测试初始时的path数据
 
         console.log('');
-        console.log('初始时的贝塞尔曲线路径为：' + initpath + '\n\n');
+        console.log('初始时的路径：');
+        console.log(initpath + '\n\n');
     }
 
-    function cut(position) {
-        var paths = path.cut(position);//切割路径
-        var obj1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        var obj2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    function test(pathdata) {
+        init(pathdata);
 
-        obj1.setAttribute('d', paths[0].toString());
-        obj2.setAttribute('d', paths[1].toString()); 
+        var newPath = path.toCurve();
+        var subPathes = newPath.subPathes();
 
-        setTimeout(function() {
+        subPathes.forEach(function(sub, i) {
+            var obj1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+       
+            obj1.setAttribute('d', sub.pathString);
             svg.appendChild(obj1);
-        }, 800);
-        setTimeout(function() {
-            svg.appendChild(obj2);
-        }, 1600);
+        });
 
-        console.log('使用cutBezier方法切割该路径后的两条子路径如下：');
-        console.log('1) ' + paths[0].toString('%n') + '(蓝色段)');
-        console.log('2) ' + paths[1].toString('%n') + '(红色段)');
+        console.log(subPathes);
+        console.log('曲线化后的路径为：');
+        console.log(newPath.toString('%n'));
     }
 
-    init('M50,50c150,300 250,50 350,150');//创建贝赛尔曲线路径
+    test('M150,150 a100,60 -30 1,0 30, 60l23 45h45v60');
 
-    cut(150);
+    window.path = path;
 });
+
 require(['start'], function() {
     
 });

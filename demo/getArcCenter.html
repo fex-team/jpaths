@@ -82,7 +82,7 @@ define('start', function(require) {
 
     var jpaths = require('../src/jpaths');
     var svg = document.getElementById('svg');
-    var i = 0, step = 600;
+    var i = 0, step = 1000;
 
     function test(arcpathdata) {//用数组的形式测试
         var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -112,6 +112,10 @@ define('start', function(require) {
 
         svg.appendChild(circle);
 
+        console.log('第 ' + i++ + ' 次测试：\n\n');
+        console.log('椭圆弧的路径为: \n' + path.toString('%n'));
+        console.log('椭圆弧的圆心为：\n(' + cent[0] + ',' + cent[1] + ')\n\n');
+
         window.path = path;
     }
 
@@ -130,7 +134,7 @@ define('start', function(require) {
 });
 
 require(['start'], function() {
-    console.log('start');
+  
 });
 </script>
 </html>

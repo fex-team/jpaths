@@ -123,7 +123,12 @@ define(function(require, exports, module) {
         
         return new Path(path);
     };
-
+    Path.prototype.toCurve = function() {
+        var pathString = this.pathString;
+        var path = utils.toCurve(pathString);
+        
+        return new Path(path);
+    };
     module.exports = function(path) {
         return new Path(path);
     };
