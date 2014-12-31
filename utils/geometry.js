@@ -82,17 +82,17 @@ define(function(require, exports, module) {
      *       cos = Math.cos(deg), sin = Math.sin(deg),
      *       rx  = 2, ry  = 1,
      *       pointArray = [3 - rx * cos,3 - rx * sin,3 - ry * cos,3 + ry * sin, 3 + rx * cos, 3 + rx * sin];
-     *   var a   = _getArcCenter(pointArray, rx, ry, deg); 
+     *   var a   = getArcCenter(pointArray, rx, ry, deg); 
      *   // 返回: [3, 3];
      *
      *   e2:
      *   var pointArray = [-2, 0, 0, 1, 2, 0];
-     *   var a   = _getArcCenter(pointArray, 2, 1, 0); 
+     *   var a   = getArcCenter(pointArray, 2, 1, 0); 
      *   // 返回: [0, 0];
      *
      * @return {[Array]}                [圆心坐标集]
      */
-    function _getArcCenter(arcPointArray, rx, ry, x_axis_rotation) {
+    function getArcCenter(arcPointArray, rx, ry, x_axis_rotation) {
         var fix  = _fixNum,
             ap   = arcPointArray,
             beta = x_axis_rotation || 0,
@@ -138,17 +138,19 @@ define(function(require, exports, module) {
         return [x, y];
     }
 
+    g.getArcCenter = getArcCenter;
+
     /**
-     * [_sweepAngular 向量1逆时针旋转至向量2扫过的角度]
+     * [sweepAngular 向量1逆时针旋转至向量2扫过的角度]
      * @param  {[Array]} pointArray [中心点、起点1、终点2的坐标集]
      * @example
      *
-     *    var s = _sweepAngular([0,0,-2,0,0,1]); //向量(-2, 0)逆时针转至向量(0,1)扫过的角度
+     *    var s = sweepAngular([0,0,-2,0,0,1]); //向量(-2, 0)逆时针转至向量(0,1)扫过的角度
      *    // 返回: 270
      *
      * @return {[Num]}              [扫过的角度，角度制]
      */
-    function _sweepAngular(pointArray) {
+    function sweepAngular(pointArray) {
         var fix = _fixNum;
         var p  = pointArray,
             v1 = [p[2] - p[0], p[3] - p[1]],
@@ -172,6 +174,8 @@ define(function(require, exports, module) {
         return fix(ang * 180 / pi, 2); //保留两位小数
     }
 
+    g.sweepAngular = sweepAngular;
+    
     // 1 路径切割，包括切割直线、圆弧、贝塞尔曲线
     //
 
@@ -268,8 +272,8 @@ define(function(require, exports, module) {
             sub2 = [cp[0], cp[1], rx, ry, rotate, 0, sf, ep[0], ep[1]];
         } else {
             var arcPointArray = sp.concat(cp, ep),
-                gc   = _getArcCenter,
-                sw   = _sweepAngular,
+                gc   = getArcCenter,
+                sw   = sweepAngular,
                 pi   = Math.pi,
                 cent = gc(arcPointArray, rx, ry, rotate * pi / 180),
                 lf1  = 1,
@@ -468,5 +472,21 @@ define(function(require, exports, module) {
     g.arc2curv = arc2curv;
     // 把二次贝塞尔曲线参数转化为三次贝塞尔曲线参数
 
+    /**
+     * [transform 坐标转换]
+     * @param  {[Array]} matrix [转换矩阵]
+     * @param  {[Array]} coord  [需转换的坐标]
+     * @return {[Array]}        [转换后的坐标]
+     */
+    function transform(matrix, coord) {
+        //matrix = [a, b, c, d, e, f]; <=> a c e
+        //                                 b d f
+        //                                 0 0 1
+        return [matrix[0] * coord[0] + matrix[2] * coord[1] + matrix[4],
+            matrix[1] * coord[0] + matrix[3] * coord[1] + matrix[5]
+        ];
+    }
+
+    g.transform = transform;
     module.exports = g;
 });

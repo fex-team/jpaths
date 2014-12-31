@@ -22,13 +22,13 @@
 </svg> 
 <canvas id="canvas" width="402" height="300"></canvas>  
 </body>
-<script src="lib/require.js"></script>
+<script src="../lib/require.js"></script>
 <script>
 
 define('start', function(require) {
     var pathElement = document.querySelector('svg #path');
     var ctx = document.querySelector('canvas').getContext('2d');
-    var jpaths = require('src/jpaths');
+    var jpaths = require('../src/jpaths');
     var path = jpaths('M50,50l40 50a40,50, 0, 1, 0, 40, 40v50m20 30h100l40, 60c100,100 250,100 150,100');
 
     path.render(pathElement);

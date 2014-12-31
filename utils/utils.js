@@ -1,6 +1,5 @@
 define(function(require, exports, module) {
     var g = require('../utils/geometry');
-    window.g = g;
     var utils = {
         point2point: function(x1, y1, x2, y2) {
             return Math.sqrt(Math.pow(x1- x2, 2) + Math.pow(y1 - y2, 2));
@@ -687,7 +686,7 @@ define(function(require, exports, module) {
            
             return path;
         },
-        toCurve : function(pathString) {
+        toCurve: function(pathString) {
             var normalPath = utils.toNormalized(pathString);
             var x, y, x0, y0;
 
@@ -714,6 +713,79 @@ define(function(require, exports, module) {
             });
 
             return normalPath;
+        },
+        transform: function(pathString, matrix) {
+            var normalPath = utils.toNormalized(pathString);
+            var tran = g.transform;
+            var x, y, type;
+
+            normalPath.forEach(function(sub, i) {
+                var end  = sub.slice(-2);
+                var len  = sub.length;
+                var end2, sub2;
+
+                type = sub[0];
+
+                switch(type) {
+                    case 'Z':
+                        break;
+                    case 'M':
+                    case 'L':
+                        end2 = tran(matrix, end);
+                        normalPath[i] = [type].concat(end2);
+                        break;
+                    case 'C':
+                        var p1   = sub.slice(1, 3);
+                        var p2   = sub.slice(3, 5);
+                        var p11, p21;
+ 
+                        p11  = tran(matrix, p1);
+                        p21  = tran(matrix, p2);
+                        end2 = tran(matrix, end);
+                        normalPath[i] = [type].concat(p11, p21, end2);
+                        break;
+                }
+            });
+
+            return normalPath;
+        },
+        render: function(pathString, svgCanvas) {
+            if (svgCanvas) {
+                if (svgCanvas.createSVGPathSegMovetoAbs) {
+                    svgCanvas.setAttribute('d', pathString);
+                } else if (svgCanvas.canvas) {
+                    var pathArray = utils.toNormalized(pathString);
+                    var ctx = svgCanvas;
+
+                    ctx.strokeStyle = 'blue';
+                    ctx.strokeWidth = 1;
+                    pathArray.forEach(function(pathData, i) {
+                        var data = pathData.slice(1);
+                        var type = pathData[0];
+                        
+                        switch(type) {
+                            case 'M':
+                                ctx.stroke();
+                                ctx.beginPath();
+                                ctx.moveTo.apply(ctx, data);
+                                break;
+                            case 'L':
+                                ctx.lineTo.apply(ctx, data);
+                                break;
+                            case 'C':
+                                ctx.bezierCurveTo.apply(ctx, data);
+                                break;
+                            case 'Z':
+                                ctx.closePath();
+                                ctx.stroke();
+                                break;
+                        } 
+                    });
+                    ctx.stroke();
+                }
+            } else {
+                alert('Make sure where you want to render to is a canvas 2d context or a svg path element!');
+            }
         }
     };
 

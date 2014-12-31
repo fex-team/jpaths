@@ -13,6 +13,7 @@ define(function(require, exports, module) {
      * @param {Object} json 数据项
      */
     var utils = require('../utils/utils');
+    window.utils = utils;
 
     function Path() {
         var pathString = [].slice.call(arguments);
@@ -31,22 +32,6 @@ define(function(require, exports, module) {
     };
 
     Path.prototype.append = function() {
-        // var pathString = [].slice.call(arguments).join('');
-        // var pathList2,
-        //     pathList1 = this.toArray();
-        // var pathNodeXY2,
-        //     pathNodeXY = this.pathNodePos();
-        // var curPos = [].slice.call(pathNodeXY, -1)[0];
-        // var letter = pathString.charAt(0);
-        // var big = letter.toUpperCase();
-
-        // pathString = 'M' + curPos.x + ',' + curPos.y + pathString;
-        // pathString = utils.toString({
-        //     pathString: pathString,
-        //     opt: 0
-        // });
-
-        // this.pathString += pathString.replace(/M\d+\.?\d+,\d+\.?\d+/, '');
         var pathString1 = [].slice.call(arguments).toString();
         var pathString  = this.pathString;
 
@@ -120,7 +105,7 @@ define(function(require, exports, module) {
     Path.prototype.toNormalized = function() {
         var pathString = this.pathString;
         var path = utils.toNormalized(pathString);
-        
+
         return new Path(path);
     };
     Path.prototype.toCurve = function() {
@@ -128,6 +113,17 @@ define(function(require, exports, module) {
         var path = utils.toCurve(pathString);
         
         return new Path(path);
+    };
+    Path.prototype.transform = function(matrix) {
+        var pathString = this.pathString;
+        var path = utils.transform(pathString, matrix);
+
+        return new Path(path);
+    };
+    Path.prototype.render = function(svgCanvas) {
+        var pathString = this.pathString;
+
+        utils.render(pathString, svgCanvas);
     };
     module.exports = function(path) {
         return new Path(path);

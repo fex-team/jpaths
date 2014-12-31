@@ -11,14 +11,18 @@
         }
         svg path {
             position: relative;
-        }
-        svg path:nth-child(odd){
             fill: none;
-            stroke: blue;
+            stroke-width: 4px;
         }
-        svg path:nth-child(even){
-            fill: none;
+        svg path:nth-child(1) {
             stroke: red;
+        }
+        svg path:nth-child(2) {
+            stroke: blue;
+            -webkit-transition: -webkit-transform 2s linear 1s;
+        }
+        svg path:nth-child(2).enter {
+            -webkit-transform: translate3d(-20px, -40px, 0);
         }
     </style>
 </head>
@@ -34,9 +38,7 @@ define('start', function(require) {
 
     var jpaths = require('../src/jpaths');
     var path;
-    var p = {};
     var svg = document.getElementById('svg');
-    var i = 1;
 
     function init(pathdata) {
         var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -48,44 +50,33 @@ define('start', function(require) {
         obj.setAttribute('d', initpath);
         svg.appendChild(obj);//测试初始时的path数据
 
-        console.log('初始路径：\n', initpath);
+        console.log('');
+        console.log('测试的路径为：');
+        console.log(initpath);
     }
 
-    function append(pathdata) {
+    function test(pathdata, matrix) {
+        init(pathdata);
+        var tranpath = path.transform(matrix).toString('%n');
         var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        var totalpath;
 
-        path.append(pathdata);//调用jpaths对象的append()方法
-        totalpath = path.toString();//获取最新的path数据
+        obj.setAttribute('d', tranpath);
+        svg.appendChild(obj);
 
-        obj.setAttribute('d', totalpath);
-        svg.appendChild(obj);//测试最新的path数据
+        setTimeout(function() {
+            obj.setAttribute('class', 'enter');
+        }, 300);
 
-        console.log(i++ + ') path.append("' + pathdata + '")之后的路径：\n');
-        console.log(path.toString('%n'));
+        console.log('');
+        console.log('用矩阵[1, 0, 0, 1, 10, 10]转换后的路径为：');
+        console.log(tranpath);
     }
 
-    init('M50,50l40 50');
-
-    var paths = ['v50', 
-            'm 20 30',
-            'h100', 
-            ['a', 40, 50, 0, 1, 0, 40, 40], 
-            'l40, 60',
-            'c100,100 250,100 150,100'];
-
-    paths.forEach(function(item, index) {
-        setTimeout(function() {
-            append(item);
-        }, index * 400);
-    });
-
-    p.append = append;
-    window.p = p;//用于外部操作演示
-    window.path = path;
+    test("M50,50v50h70c80,200,150,200,100,10q50 60 80 70t80,90", [1, 0, 0, 1, 20, 40]);
 });
+
 require(['start'], function() {
-   
+    
 });
 </script>
 </html>
