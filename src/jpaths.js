@@ -7,35 +7,55 @@
  * ====================================================
  */
 define(function(require, exports, module) {
-    /**
-     * 格式化函数
-     * @param {String} template 模板
-     * @param {Object} json 数据项
-     */
-    var utils = require('../utils/utils');
-    window.utils = utils;
+
+    var utils = require('../src/utils'),
+        shapeDefines = {},
+        jPaths = {},
+        separatorRegExp = /(?!^)\s*,?\s*(\d+\.?\d*|[a-z]+)/gim;//用','分隔命令和数字，预处理
+        isCommandRegExp = /^[MLHVCSQTAZ]$/i;//判断自定义path命令是否为svg 原生的path命令
+        segCommandRegExp = /[a-z]+(,\d+\.?\d*)+/gmi; //一段命令，包括命令符和参数
+
+    jPaths.version = "0.0.1";
+
 
     function Path() {
-        var pathString = [].slice.call(arguments);
-        this.set(pathString);
+        var path = [].slice.call(arguments);
+        this.set(path);
     }
 
-    Path.prototype.set = function() {
-        var pathString = [].slice.call(arguments).join(',');
+    Path._ = {};
+    Path._.path = 'M0 0';//初始化path值
 
-        pathString = pathString || 'M0 0';
-        this.pathString = utils.toString({
-            pathString: pathString,
-            opt: 0
-        }); 
-        //toDo 添加异常处理
+    Path.prototype.define = function(name, fn) {
+        if (isCommandRegExp.test(name)) throw new Error("The name of the shape you define can't be base command of SVG Path.");
+
+        shapeDefines[name] = fn;
+    };
+
+    Path.prototype.set = function() {
+        if (!arguments.length) throw new Error("The param in the Method set() can't be empty or undefined.");
+        
+        var path = [].slice.call(arguments).join(',');
+
+        Path._.path = utils.toString({path: path, opt: 0 }); //toDo 添加异常处理
     };
 
     Path.prototype.append = function() {
-        var pathString1 = [].slice.call(arguments).toString();
-        var pathString  = this.pathString;
+        var path = [].slice.call(arguments).toString().replace(separatorRegExp, ',$1');
+        var result, path2 = '', type;
 
-        this.set(pathString, pathString1);
+        while ((result = segCommandRegExp.exec(path)) !== null) {
+            result = result[0];
+            type = result.charAt(0);
+
+            if (shapeDefines[type]) {
+                path2 += shapeDefines[type].apply(null, result.subString(2).split(','));
+            } else {
+                path2 += result;
+            }
+        }
+        
+        Path._.path += utils.toString({path: path2, opt: 0});
         // 添加异常处理;
     };
     Path.prototype.toString = function() {
@@ -47,86 +67,96 @@ define(function(require, exports, module) {
         var result;
 
         return utils.toString({
-                    pathString: this.pathString,
+                    path: Path._.path,
                     opt: opt
                 });
     };
     Path.prototype.toArray = Path.prototype.valueOf = function() {
-        var pathString = this.pathString;
-        return utils.toArray(pathString);
+        var path = Path._.path;
+        return utils.toArray(path);
     };
     Path.prototype.toRelative = function() {
-        var pathString = this.pathString;
-        return utils.toRelative(pathString);
+        var path = Path._.path;
+        return utils.toRelative(path);
     };
     Path.prototype.toAbsolute = function() {
-        var pathString = this.pathString;
-        return utils.toAbsolute(pathString);
+        var path = Path._.path;
+        return utils.toAbsolute(path);
     };
     Path.prototype.pathNodePos = function() {
-        var pathString = this.pathString;
-        return utils.pathNodePos(pathString);
+        var path = Path._.path;
+        return utils.pathNodePos(path);
     };
     Path.prototype.length = function() {
-        var pathString = this.pathString;
-        return utils.pathLength(pathString, 0, 0);
+        var path = Path._.path;
+        return utils.pathLength(path, 0, 0);
     };
     Path.prototype.subPathes = function() {
-        var pathString = this.pathString;
-        return utils.subPathes(pathString);
+        var path = Path._.path;
+        return utils.subPathes(path);
     };
     Path.prototype.lengthes = function() {
         // 用于获取第一段子路径，前两段子路径，..., 直到所有子路径的长度
-        // var pathString = this.pathString;
+        // var path = Path._.path;
         var subPathes = this.subPathes();
         return utils.lengthes(subPathes);
     };
     Path.prototype.at = function(position) {
         // position是沿着路径从起点出发的距离
-        var pathString = this.pathString;
-        return utils.at(pathString, position);
+        var path = Path._.path;
+        return utils.at(path, position);
     };
     Path.prototype.cut = function(position) {
-        var pathString = this.pathString;
+        var path = Path._.path;
         var subs;
         
-        subs = utils.cut(pathString, position);
+        subs = utils.cut(path, position);
 
         return [new Path(subs[0]),
                 new Path(subs[1])
             ];
     };
     Path.prototype.sub = function(position, length) {
-        var pathString = this.pathString;
-        var sub = utils.sub(pathString, position, length);
+        var path = Path._.path;
+        var sub = utils.sub(path, position, length);
 
         return new Path(sub);
     };
     Path.prototype.toNormalized = function() {
-        var pathString = this.pathString;
-        var path = utils.toNormalized(pathString);
+        var path = Path._.path;
+        var path = utils.toNormalized(path);
 
         return new Path(path);
     };
     Path.prototype.toCurve = function() {
-        var pathString = this.pathString;
-        var path = utils.toCurve(pathString);
-        
+        var path = Path._.path;
+        var path = utils.toCurve(path);
+
         return new Path(path);
     };
     Path.prototype.transform = function(matrix) {
-        var pathString = this.pathString;
-        var path = utils.transform(pathString, matrix);
+        var path = Path._.path;
+        var path = utils.transform(path, matrix);
+
+        return new Path(path);
+    };
+    Path.prototype.tween = function(destPath, t) {
+        var curPath = Path._.path;
+        var path = utils.tween(curPath, destPath, t);
 
         return new Path(path);
     };
     Path.prototype.render = function(svgCanvas) {
-        var pathString = this.pathString;
+        var path = Path._.path;
 
-        utils.render(pathString, svgCanvas);
+        utils.render(path, svgCanvas);
     };
-    module.exports = function(path) {
+
+    jPaths = function(path) {
         return new Path(path);
     };
+    jPaths.define = Path.prototype.define;
+
+    module.exports = jPaths;
 
 });
