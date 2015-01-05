@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>jpaths</title>
+    <style stylesheet="text/css">
+        svg {
+            width: 502px;
+            height: 600px;
+            border: 1px solid #ccc;
+        }
+
+        svg #path {
+            stroke-width: 2px;
+            stroke: green;
+        }
+    </style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="svg">
+    <text x="15" y="20" fill="red" font-family="Verdana" font-size="20">原始路径</text>
+    <path fill="none" id ="path"/>
+</svg>  
+</body>
+<script src="../lib/require.js"></script>
+<script>
+
+define('start', function(require) {
+    var pathElement  = document.querySelector('svg #path');
+    var jpaths = require('../src/jpaths');
+    var path = jpaths('M200 50 l-75 200 l150 0 Z');
+
+    path.render(pathElement);
+
+    // 定义一个shape
+    jpaths.define('rect', function() {
+        if (arguments.length != 2) throw new Error('The rect command should have 2 parameters');
+
+        var params = [].slice.call(arguments);
+        var dx = params.shift();
+        var dy = params.shift();
+
+        return ['h', dx, 'v', dy, 'h', -dx, 'v', -dy, 'z'];
+    });
+
+    // 添加上面定义的shape
+    path.append('M200 400', 'rect', [200, 150]);
+    // 渲染新路径
+    path.render(pathElement);
+
+});
+require(['start'], function() {
+});
+</script>
+</html>

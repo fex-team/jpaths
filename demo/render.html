@@ -37,6 +37,8 @@ define('start', function(require) {
     ctx.font = "20px Verdana";
     ctx.fillStyle = 'red';
     ctx.fillText("在Canvas中渲染", 15, 20);
+
+    window.path = path;
 });
 require(['start'], function() {
 });
