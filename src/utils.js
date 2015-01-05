@@ -1,48 +1,61 @@
 define(function(require, exports, module) {
-    var g = require('../src/geometry');
+    var g = require('../src/geometry'),
+        separatorRegExp = /(?!^)\s*,?\s*(\d+\.?\d*|[a-z])/igm,//用','分隔命令和数字，预处理
+        replaceRegExp0 = /,?([a-z]),?/gim, //替换命令符两侧的','
+        replaceRegExp1 = /(\d+\.?\d*)\s(\d+\.?\d*)(?=\s[a-z]|$)/gim, //仅将当前坐标用','分隔
+        replaceRegExp2 = /(\d+\.?\d*)\s(\d+\.?\d*)\s*(?=[a-z]|$)/gim, //仅将当前坐标用','分隔, 并且在命令符前断行
+        fullcommands = {M: 'Moveto',
+            L: 'Lineto',
+            H: 'LinetoHorizontal',
+            V: 'LinetoVertical',
+            C: 'CurvetoCubic',
+            S: 'CurvetoCubicSmooth',
+            Q: 'CurvetoQuadratic',
+            T: 'CurvetoQuadraticSmooth',
+            A: 'Arc'
+        },
+        precision = 1e-6;
+
     var utils = {
         point2point: function(x1, y1, x2, y2) {
             return Math.sqrt(Math.pow(x1- x2, 2) + Math.pow(y1 - y2, 2));
         },
-        toString: function(dataopt) {
-            var path0 = dataopt.path;
-            var opt = dataopt.opt;
-            var path, result;
+        toString: function(pathOpt) {
+            var path = pathOpt.path;
 
-            path = path0.replace(/(\d+\.?\d*|[a-z])\s*,?\s*/gim, '$1,').replace(/,$/gm, '');
-            switch (opt) {
+            path = path.replace(separatorRegExp, ',$1');
+
+            switch (pathOpt.opt) {
                 case 0:
-                    result = path.replace(/\s*,?\s*([a-z])\s*,?\s*/gim, '$1');
+                    path = path.replace(replaceRegExp0, '$1');
                     break;
                 case 1:
-                    result = path.replace(/,/g, ' ').replace(/(\d+\.?\d*)\s(\d+\.?\d*)(?=\s[a-z]|$)/gim, '$1,$2');
+                    path = path.replace(/,/g, ' ').replace(replaceRegExp1, '$1,$2');
                     break;
                 case 2:
-                    result = path.replace(/,/g, ' ').replace(/(\d+\.?\d*)\s(\d+\.?\d*)(?=\s[a-z]|$)/gim, '$1,$2').replace(/\s([a-z])/gim, '\n$1');
+                    path = path.replace(/,/g, ' ').replace(replaceRegExp2, '$1,$2\n');
                     break;
                 default:
-                    result = path.replace(/\s*,?\s*([a-z])\s*,?\s*/gi, '$1');
+                    path = path.replace(replaceRegExp0, '$1');
                     break;
             }
-            return result;
+            return path;
         },
         toArray: function() {
-            var args = [].slice.call(arguments);
-            var pathString = args.length ? args.join(' ').replace(/,/g, ' ') : '';
-            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            var result = [],
-                pathList, i, letter, item;
+            if (!arguments.length) return;
+            
+            var pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var path = [].slice.call(arguments).join(' ').replace(/,/g, ' ');
+            var result = [], pathList, i, type, item, param, lareFlag, sweepFlag;
 
-            path.setAttribute('d', pathString);
-            pathList = path.pathSegList;
+            pathElement.setAttribute('d', path);
+            pathList = pathElement.pathSegList;
 
             for (i = 0; i < pathList.length; i++) {
-                var param = [];
-                var large, sweep;
-
                 item = pathList[i];
-                letter = item.pathSegTypeAsLetter;
-                switch (letter.toLowerCase()) {
+                type = item.pathSegTypeAsLetter;
+
+                switch (type.toLowerCase()) {
                     case 'm':
                     case 'l':
                     case 't':
@@ -61,37 +74,42 @@ define(function(require, exports, module) {
                         param = [item.x2, item.y2, item.x, item.y];
                         break;
                     case 'a':
-                        large = item.largeArcFlag ? 1 : 0;
-                        sweep = item.sweepFlag ? 1 : 0;
-                        param = [item.r1, item.r2, item.angle, large, sweep, item.x, item.y];
+                        lareFlag = item.largeArcFlag ? 1 : 0;
+                        sweepFlag = item.sweepFlag ? 1 : 0;
+                        param = [item.r1, item.r2, item.angle, lareFlag, sweepFlag, item.x, item.y];
                         break;
                     case 'c':
                         param = [item.x1, item.y1, item.x2, item.y2, item.x, item.y];
                         break;
                 }
-                param.unshift(letter);
+
+                param.unshift(type);
                 result.push(param);
             }
             return result;
         },
-        toRelative: function(pathString) {
-            var dx, dy, x0, y0, x1, y1, x2, y2, segs;
-            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            var set = function(type) {
+        toRelative: function(path) {
+            if (!path) return;
+
+            function set(type) {
                 var args = [].slice.call(arguments, 1),
                     rcmd = 'createSVGPathSeg' + type + 'Rel',
-                    rseg = path[rcmd].apply(path, args);
+                    rseg = pathElement[rcmd].apply(pathElement, args);
 
                 segs.replaceItem(rseg, i);
-            };
-            path.setAttribute('d', pathString);
-            segs = path.pathSegList;
+            }
 
-            for (var x = 0, y = 0, i = 0, len = segs.numberOfItems; i < len; i++) {
-                var seg = segs.getItem(i),
-                    c = seg.pathSegTypeAsLetter;
+            var pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var x, y, dx, dy, x0, y0, x1, y1, x2, y2, seg, segs, type, i;
 
-                if (/[MLHVCSQTAZz]/.test(c)) {
+            pathElement.setAttribute('d', path);
+            segs = pathElement.pathSegList;
+
+            for (x = 0, y = 0, i = 0; i < segs.numberOfItems; i++) {
+                seg = segs.getItem(i);
+                type = seg.pathSegTypeAsLetter;
+
+                if (/[MLHVCSQTAZz]/.test(type)) {
                     if ('x1' in seg) {
                         x1 = seg.x1 - x;
                     }
@@ -110,34 +128,34 @@ define(function(require, exports, module) {
                     if ('y' in seg) {
                         dy = -y + (y = seg.y);
                     }
-                    switch (c) {
+
+                    switch (type) {
                         case 'M':
-                            set('Moveto', dx, dy);
+                            set(fullcommands[type], dx, dy);
                             break;
                         case 'L':
-                            set('Lineto', dx, dy);
+                            set(fullcommands[type], dx, dy);
                             break;
                         case 'H':
-                            set('LinetoHorizontal', dx);
+                            set(fullcommands[type], dx);
                             break;
                         case 'V':
-                            set('LinetoVertical', dy);
+                            set(fullcommands[type], dy);
                             break;
                         case 'C':
-                            set('CurvetoCubic', dx, dy, x1, y1, x2, y2);
+                            set(fullcommands[type], dx, dy, x1, y1, x2, y2);
                             break;
                         case 'S':
-                            set('CurvetoCubicSmooth', dx, dy, x2, y2);
+                            set(fullcommands[type], dx, dy, x2, y2);
                             break;
                         case 'Q':
-                            set('CurvetoQuadratic', dx, dy, x1, y1);
+                            set(fullcommands[type], dx, dy, x1, y1);
                             break;
                         case 'T':
-                            set('CurvetoQuadraticSmooth', dx, dy);
+                            set(fullcommands[type], dx, dy);
                             break;
                         case 'A':
-                            set('Arc', dx, dy, seg.r1, seg.r2, seg.angle,
-                                seg.largeArcFlag, seg.sweepFlag);
+                            set(fullcommands[type], dx, dy, seg.r1, seg.r2, seg.angle, seg.largeArcFlag, seg.sweepFlag);
                             break;
                         case 'Z':
                         case 'z':
@@ -150,32 +168,36 @@ define(function(require, exports, module) {
                     if ('y' in seg) y += seg.y;
                 }
                 // store the start of a subpath
-                if (c == 'M' || c == 'm') {
+                if (type == 'M' || type == 'm') {
                     x0 = x;
                     y0 = y;
                 }
             }
 
-            return path.getAttribute('d').replace(/Z/g, 'z');
+            return pathElement.getAttribute('d').replace(/Z/g, 'z');
         },
-        toAbsolute: function(pathString) {
-            var x0, y0, x1, y1, x2, y2, segs;
-            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            var set = function(type) {
+        toAbsolute: function(path) {
+            if (!path) return;
+
+            function set(type) {
                 var args = [].slice.call(arguments, 1),
                     rcmd = 'createSVGPathSeg' + type + 'Abs',
-                    rseg = path[rcmd].apply(path, args);
+                    rseg = pathElement[rcmd].apply(pathElement, args);
 
                 segs.replaceItem(rseg, i);
-            };
+            }
 
-            path.setAttribute('d', pathString);
-            segs = path.pathSegList;
+            var pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var x, y, dx, dy, x0, y0, x1, y1, x2, y2, seg, segs, type, i;
 
-            for (var x = 0, y = 0, i = 0, len = segs.numberOfItems; i < len; ++i) {
-                var seg = segs.getItem(i),
-                    c = seg.pathSegTypeAsLetter;
-                if (/[MLHVCSQTA]/.test(c)) {
+            pathElement.setAttribute('d', path);
+            segs = pathElement.pathSegList;
+
+            for (x = 0, y = 0, i = 0; i < segs.numberOfItems; i++) {
+                seg = segs.getItem(i);
+                type = seg.pathSegTypeAsLetter;
+
+                if (/[MLHVCSQTA]/.test(type)) {
                     if ('x' in seg) x = seg.x;
                     if ('y' in seg) y = seg.y;
                 } else {
@@ -185,35 +207,36 @@ define(function(require, exports, module) {
                     if ('y2' in seg) y2 = y + seg.y2;
                     if ('x' in seg) x += seg.x;
                     if ('y' in seg) y += seg.y;
-                    switch (c) {
-                        case 'm':
-                            set('Moveto', x, y);
+
+                    type = type.toUpperCase();
+                    switch (type) {
+                        case 'M':
+                            set(fullcommands[type], x, y);
                             break;
-                        case 'l':
-                            set('Lineto', x, y);
+                        case 'L':
+                            set(fullcommands[type], x, y);
                             break;
-                        case 'h':
-                            set('LinetoHorizontal', x);
+                        case 'H':
+                            set(fullcommands[type], x);
                             break;
-                        case 'v':
-                            set('LinetoVertical', y);
+                        case 'V':
+                            set(fullcommands[type], y);
                             break;
-                        case 'c':
-                            set('CurvetoCubic', x, y, x1, y1, x2, y2);
+                        case 'C':
+                            set(fullcommands[type], x, y, x1, y1, x2, y2);
                             break;
-                        case 's':
-                            set('CurvetoCubicSmooth', x, y, x2, y2);
+                        case 'S':
+                            set(fullcommands[type], x, y, x2, y2);
                             break;
-                        case 'q':
-                            set('CurvetoQuadratic', x, y, x1, y1);
+                        case 'Q':
+                            set(fullcommands[type], x, y, x1, y1);
                             break;
-                        case 't':
-                            set('CurvetoQuadraticSmooth', x, y);
+                        case 'T':
+                            set(fullcommands[type], x, y);
                             break;
-                        case 'a':
-                            set('Arc', x, y, seg.r1, seg.r2, seg.angle, seg.largeArcFlag, seg.sweepFlag);
+                        case 'A':
+                            set(fullcommands[type], x, y, seg.r1, seg.r2, seg.angle, seg.largeArcFlag, seg.sweepFlag);
                             break;
-                        case 'z':
                         case 'Z':
                             x = x0;
                             y = y0;
@@ -221,92 +244,82 @@ define(function(require, exports, module) {
                     }
                 }
                 // Record the start of a subpath
-                if (c == 'M' || c == 'm') {
+                if (type == 'M') {
                     x0 = x;
                     y0 = y;
                 }
             }
 
-            return path.getAttribute('d').replace(/z/g, 'Z');
+            return pathElement.getAttribute('d').replace(/z/g, 'Z');
         },
-        pathNodePos: function(pathString, x, y) {
+        nodesPos: function(path, x, y) {
             // x, y分别为当前路径的起始点坐标
-            var x0, y0, type, segs, pos = [], precision = 1e-6, isBreakPoint = 0;/*1 表示true, 0表示false*/
-            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var x0, y0, type, segs, seg, pos = [], isBreakPoint, i;
 
-            x = x ? x : 0;
-            y = y ? y : 0;
-            path.setAttribute('d', pathString);
-            segs = path.pathSegList;
+            x = x || 0;
+            y = y || 0;
+            pathElement.setAttribute('d', path);
+            segs = pathElement.pathSegList;
 
-            for (var i = 0, len = segs.numberOfItems; i < len; ++i) {
-                var seg = segs.getItem(i),
-                    c = seg.pathSegTypeAsLetter;
+            for (i = 0; i < segs.numberOfItems; i++) {
+                seg = segs.getItem(i);
+                type = seg.pathSegTypeAsLetter;
 
-                isBreakPoint = 0;
+                isBreakPoint = false;
 
-                if (/[MLHVCSQTA]/.test(c)) {
-                    if (c === 'M') {
-                        isBreakPoint = Math.abs(seg.x - x) > precision || Math.abs(seg.y - y) > precision ? 1 : 0;
-                    }
+                if (/[MLHVCSQTA]/.test(type)) {
                     if ('x' in seg) x = seg.x;
                     if ('y' in seg) y = seg.y;
-                } else {
-                    if (c === 'm') {
-                        isBreakPoint = Math.abs(seg.x) > precision || Math.abs(seg.y) > precision ? 1 : 0;
+                    if (type === 'M') {
+                        isBreakPoint = Math.abs(seg.x - x) > precision || Math.abs(seg.y - y) > precision;
+                        x0 = x;
+                        y0 = y;
                     }
+                } else {
                     if ('x' in seg) x += seg.x;
                     if ('y' in seg) y += seg.y;
-                    if (c == 'z' || c == 'Z') {
-                            x = x0;
-                            y = y0;
+                    if (type === 'm') {
+                        isBreakPoint = seg.x !== 0 || seg.y !== 0;
+                        x0 = x;
+                        y0 = y;
+                    }
+                    if (type == 'z' || type == 'Z') {
+                        x = x0;
+                        y = y0;
                     }
                 }
-                // Record the start of a subpath
-                if (c == 'M' || c == 'm') {
-                    x0 = x;
-                    y0 = y;
-                }
+
                 pos.push({x: x, y: y, isBreakPoint: isBreakPoint});
             }
 
             return pos;
         },
-        pathLength: function(pathString, x, y) {
+        length: function(path, x, y) {
             // x、y为指定路径的起始点，如果有必要的话
-            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-            if(typeof x === 'undefined' || typeof y === 'undefined') {
-                console.log('用pathLength求路径方法时，注意路径是否有明确的起点。默认以(0, 0)开始');
-            }
-            x = x ? x : 0;
-            y = y ? y : 0;
+            x = x || 0;
+            y = y || 0;
             
-            pathString = 'M' + x + ',' + y + pathString;
-            path.setAttribute('d', pathString);
+            path = 'M' + x + ',' + y + path;
+            pathElement.setAttribute('d', path);
 
-            return path.getTotalLength();
+            return pathElement.getTotalLength();
         },
-        subPathes: function(pathString) {
-            //用于获取路径的子路径
-            var subs = [];
-            var type, count = 0;
-            var pathString1 = utils.toAbsolute(pathString);
-            var pathNodeXY = utils.pathNodePos(pathString1);
-            var pathList = utils.toArray(pathString1);
-            var x = pathNodeXY[0].x, y = pathNodeXY[0].y;
-            var sx, sy, x1, y1, x2, y2, preType;
+        subPathes: function(path) {
+            var nodesPos,
+                pathArray,
+                sx, sy, x, y, x1, y1, x2, y2, preType, type, type2, len, count = 0, subs = [], pathData, path2;
 
-            pathList.forEach(function(item, index) {
-                var data  = item.slice(1);
-                var start = [];
-                var end   = [];
-                var pathString2, c1, c2;
+            path = utils.toAbsolute(path);
+            nodesPos = utils.nodesPos(path);
+            pathArray = utils.toArray(path);
 
+            pathArray.forEach(function(item, index) {
                 type = item[0];
-
-                x = pathNodeXY[index].x;
-                y = pathNodeXY[index].y;
+                x = nodesPos[index].x;
+                y = nodesPos[index].y;
 
                 switch(type) {
                     case 'M':
@@ -314,21 +327,24 @@ define(function(require, exports, module) {
                     case 'L':
                     case 'H':
                     case 'V':
-                        pathString2 = ['M', sx, sy, 'L'].concat([x, y]).toString();
-                        break;
                     case 'Z':
-                        pathString2 = ['M', sx, sy, 'L'].concat([x, y]).toString();
+                        type2 = 'L';
+                        pathData = [x, y];
                         break;
                     case 'A':
-                        pathString2 = ['M', sx, sy, 'A'].concat(data).toString();
+                        type2 = type;
+                        pathData  = item.slice(1);
                         break;
                     case 'Q':
-                        x1 = data[0];
-                        y1 = data[1];
-
-                        pathString2 = ['M', sx, sy, 'Q'].concat(data).toString();
+                        type2 = type;
+                        pathData  = item.slice(1);
+                        x1 = pathData[0];
+                        y1 = pathData[1];
                         break;
                     case 'T':
+                        type2 = 'Q';
+                        pathData  = item.slice(1);
+                        pathData.unshift(x1, y1);
                         if (preType === 'Q' || preType === 'T') {
                             x1 = 2 * sx - x1;
                             y1 = 2 * sy - y1;
@@ -336,16 +352,17 @@ define(function(require, exports, module) {
                             x1 = sx;
                             y1 = sy;
                         }
-
-                        pathString2 = ['M', sx, sy, 'Q', x1, y1].concat(data).toString();
                         break;
                     case 'C':
-                        x2 = data[2];
-                        y2 = data[3];
-
-                        pathString2 = ['M', sx, sy, 'C'].concat(data).toString();
+                        type2 = type;
+                        pathData  = item.slice(1);
+                        x2 = pathData[2];
+                        y2 = pathData[3];
                         break;
                     case 'S':
+                        type2 = 'C';
+                        pathData  = item.slice(1);
+                        pathData.unshift(x1, y1);
                         if (preType === 'C' || preType ==='S') {
                             x1 = 2 * sx - x2;
                             y1 = 2 * sy - y2;
@@ -354,29 +371,31 @@ define(function(require, exports, module) {
                             y1 = sy;
                         }
 
-                        x2 = data[0];
-                        y2 = data[1];
-
-                        pathString2 = ['M', sx, sy, 'C', x1, y1].concat(data).toString();
+                        x2 = pathData[0];
+                        y2 = pathData[1];
                         break;
                 }
 
-                start.push(sx, sy);
-                end.push(x, y);
+                if (type !== 'M') {
+                    path2 = ['M', sx, sy, type2].concat(pathData).toString();
+                    path2 = utils.toString({path: path2, opt: 0 }); 
+                    len = utils.length(path2, sx, sy);
+                    subs.push({path: path2, 
+                        type: type, 
+                        nomalType: type2,
+                        index: index, 
+                        count: count++, 
+                        normalPathData: pathData, 
+                        pathData: item.slice(1),
+                        startPoint: [sx, sy], 
+                        endPoint: [x, y], 
+                        length: len
+                    });
+                }
+
                 sx = x;
                 sy = y;
                 preType = type;
-
-                if (pathString2) {
-                    var pathString3 = utils.toString({
-                        path: pathString2,
-                        opt: 0
-                    });
-                    var length = utils.pathLength(pathString3, start[0], start[1]);
-
-                    subs.push({pathString: pathString3, type: type, index: index, count: count++, pathData: data, startPoint: start, endPoint: end, length: length});
-                }
-
             });
             return subs;
         },
@@ -586,7 +605,7 @@ define(function(require, exports, module) {
                 var start = item.startPoint;
                 var end = item.endPoint;
                 var pd = item.pathData;
-                var cubic, c1, c2;
+                var cubic, contr1, contr2;
 
                 if (x !== start[0] || y !== start[1]) {
                     path.push(['M', start[0], start[1]]);
@@ -600,9 +619,9 @@ define(function(require, exports, module) {
                     case 'L':
                     case 'C':
                         if (type === 'C') {
-                            c2 = pd.slice(-4, -2);
-                            x2 = c2[0];
-                            y2 = c2[1];
+                            contr2 = pd.slice(-4, -2);
+                            x2 = contr2[0];
+                            y2 = contr2[1];
                         }
 
                         path.push([type].concat(pd));
@@ -618,9 +637,9 @@ define(function(require, exports, module) {
                         preType = 'L';
                         break;
                     case 'Q':
-                        c1 = pd.slice(-4, -2);
-                        x1 = c1[0];
-                        y1 = c1[1];
+                        contr1 = pd.slice(-4, -2);
+                        x1 = contr1[0];
+                        y1 = contr1[1];
 
                         cubic = g.upgradeBezier(start.concat(pd), 3);
                         path.push(['C'].concat(cubic.slice(2)));
@@ -648,9 +667,9 @@ define(function(require, exports, module) {
                         }
               
                         cubic = g.upgradeBezier(start.concat([x1, y1]).concat(pd), 3);
-                        c1 = cubic.slice(-4, -2);
-                        x1 = c1[0];
-                        y1 = c1[1];
+                        contr1 = cubic.slice(-4, -2);
+                        x1 = contr1[0];
+                        y1 = contr1[1];
 
                         path.push(['C'].concat(cubic.slice(2)));
 

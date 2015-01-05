@@ -64,7 +64,7 @@ define('start', function(require) {
         subs.forEach(function(sub, i) {
             var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-            obj.setAttribute('d', sub.pathString);
+            obj.setAttribute('d', sub.path);
             svg.appendChild(obj);
         });
 
@@ -78,7 +78,7 @@ define('start', function(require) {
             subs1.forEach(function(sub, i) {
                 var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-                obj.setAttribute('d', sub.pathString);
+                obj.setAttribute('d', sub.path);
                 svg.appendChild(obj);
             });
         }, 2400);
