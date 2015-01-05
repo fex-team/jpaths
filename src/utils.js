@@ -369,7 +369,7 @@ define(function(require, exports, module) {
 
                 if (pathString2) {
                     var pathString3 = utils.toString({
-                        pathString: pathString2,
+                        path: pathString2,
                         opt: 0
                     });
                     var length = utils.pathLength(pathString3, start[0], start[1]);
@@ -570,7 +570,7 @@ define(function(require, exports, module) {
 
             subs = utils.cut(pathString, position1);
 
-            pathString1 = utils.toString({pathString: subs[0].toString(), opt: 0});
+            pathString1 = utils.toString({path: subs[0].toString(), opt: 0});
             sub1 = utils.cut(pathString1, position);
 
             return sub1[1];
@@ -756,11 +756,11 @@ define(function(require, exports, module) {
             var curvePath1 = utils.toCurve(path1);
             var curvePath2 = utils.toCurve(path2);
             var subPathes1  = utils.subPathes(utils.toString({
-                pathString: curvePath1.toString(''),
+                path: curvePath1.toString(''),
                 opt: 0 
             }));
             var subPathes2  = utils.subPathes(utils.toString({
-                pathString: curvePath2.toString(''),
+                path: curvePath2.toString(''),
                 opt: 0
             }));
             var n1, n2, type1, type2, step, pathString = '';
@@ -821,7 +821,7 @@ define(function(require, exports, module) {
                 pathData.unshift('M');
 
                 pathString += utils.toString({
-                    pathString: pathData.toString(''),
+                    path: pathData.toString(''),
                     opt: 1
                 });
             }

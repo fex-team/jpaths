@@ -11,15 +11,13 @@ define(function(require, exports, module) {
     var utils = require('../src/utils'),
         shapeDefines = {},
         jPaths = {},
-        separatorRegExp = /(?!^)\s*,?\s*(\d+\.?\d*|[a-z]+)/gim;//用','分隔命令和数字，预处理
+        separatorRegExp = /(?!^)\s*,?\s*(\d+\.?\d*|[a-z]+)/igm;//用','分隔命令和数字，预处理
         isCommandRegExp = /^[MLHVCSQTAZ]$/i;//判断自定义path命令是否为svg 原生的path命令
-        segCommandRegExp = /[a-z]+(,\d+\.?\d*)+/gmi; //一段命令，包括命令符和参数
-
-    jPaths.version = "0.0.1";
-
+        segCommandRegExp = /[a-z]+(,\d+\.?\d*)+/igm; //一段命令，包括命令符和参数
 
     function Path() {
         var path = [].slice.call(arguments);
+
         this.set(path);
     }
 
@@ -58,42 +56,27 @@ define(function(require, exports, module) {
         Path._.path += utils.toString({path: path2, opt: 0});
         // 添加异常处理;
     };
-    Path.prototype.toString = function() {
-        var args = [].slice.call(arguments);
-        var len = args.length;
-        var opt = len === 0 ? 0 :
-            args[0] === '%s' ? 1 :
-            args[0] === '%n' ? 2 : 0;
-        var result;
-
-        return utils.toString({
-                    path: Path._.path,
-                    opt: opt
-                });
+    Path.prototype.toString = function(opt) {
+        opt = !opt ? 0 : opt === '%s' ? 1 : opt === '%n' ? 2 : 0; 
+        return utils.toString({path: Path._.path, opt: opt}); 
     };
     Path.prototype.toArray = Path.prototype.valueOf = function() {
-        var path = Path._.path;
-        return utils.toArray(path);
+        return utils.toArray(Path._.path);
     };
     Path.prototype.toRelative = function() {
-        var path = Path._.path;
-        return utils.toRelative(path);
+        return utils.toRelative(Path._.path);
     };
     Path.prototype.toAbsolute = function() {
-        var path = Path._.path;
-        return utils.toAbsolute(path);
+        return utils.toAbsolute(Path._.path);
     };
     Path.prototype.pathNodePos = function() {
-        var path = Path._.path;
-        return utils.pathNodePos(path);
+        return utils.pathNodePos(Path._.path);
     };
     Path.prototype.length = function() {
-        var path = Path._.path;
-        return utils.pathLength(path, 0, 0);
+        return utils.pathLength(Path._.path, 0, 0);
     };
     Path.prototype.subPathes = function() {
-        var path = Path._.path;
-        return utils.subPathes(path);
+        return utils.subPathes(Path._.path);
     };
     Path.prototype.lengthes = function() {
         // 用于获取第一段子路径，前两段子路径，..., 直到所有子路径的长度
@@ -103,58 +86,50 @@ define(function(require, exports, module) {
     };
     Path.prototype.at = function(position) {
         // position是沿着路径从起点出发的距离
-        var path = Path._.path;
-        return utils.at(path, position);
+        return utils.at(Path._.path, position);
     };
     Path.prototype.cut = function(position) {
-        var path = Path._.path;
-        var subs;
-        
-        subs = utils.cut(path, position);
+        var subs = utils.cut(Path._.path, position);
 
         return [new Path(subs[0]),
                 new Path(subs[1])
             ];
     };
     Path.prototype.sub = function(position, length) {
-        var path = Path._.path;
-        var sub = utils.sub(path, position, length);
+        var sub = utils.sub(Path._.path, position, length);
 
         return new Path(sub);
     };
     Path.prototype.toNormalized = function() {
-        var path = Path._.path;
-        var path = utils.toNormalized(path);
+        var path = utils.toNormalized(Path._.path);
 
         return new Path(path);
     };
     Path.prototype.toCurve = function() {
-        var path = Path._.path;
-        var path = utils.toCurve(path);
+        var path = utils.toCurve(Path._.path);
 
         return new Path(path);
     };
     Path.prototype.transform = function(matrix) {
-        var path = Path._.path;
-        var path = utils.transform(path, matrix);
+        var path = utils.transform(Path._.path, matrix);
 
         return new Path(path);
     };
     Path.prototype.tween = function(destPath, t) {
-        var curPath = Path._.path;
-        var path = utils.tween(curPath, destPath, t);
+        var path = utils.tween(Path._.path, destPath, t);
 
         return new Path(path);
     };
     Path.prototype.render = function(svgCanvas) {
-        var path = Path._.path;
 
-        utils.render(path, svgCanvas);
+        utils.render(Path._.path, svgCanvas);
     };
 
     jPaths = function(path) {
         return new Path(path);
     };
+
+    jPaths.version = "0.0.1";
     jPaths.define = Path.prototype.define;
 
     module.exports = jPaths;
