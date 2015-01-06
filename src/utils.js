@@ -91,6 +91,13 @@ define(function(require, exports, module) {
 
     　　return -1;
     };
+    var isArrayEqual = function(array1, array2) {
+        if (array1.length !== array2.length) {
+            return false;
+        } else {
+            return array1.toString() === array2.toString();
+        }
+    };
 
     var utils = {
         toString: function(pathOpt) {
@@ -564,7 +571,7 @@ define(function(require, exports, module) {
             var subPathes = utils.subPathes(path);
             var lengthes = utils.lengthes(subPathes);
             var subs, path2;
-            
+
             if (length) {
                 subs = utils.cut(path, position + length);
                 path2 = utils.toString({path: subs[0].toString(), opt: 0});
@@ -575,113 +582,55 @@ define(function(require, exports, module) {
 
             return subs[1];
         },
-        toNormalized: function(pathString) {
-            var pathString1 = utils.toAbsolute(pathString);//先转化为绝对路径
-            var subPathes = utils.subPathes(pathString1);
-            var path = [];
-            var x, y, preType, x2, y2, x1, y1;
+        toNormalized: function(path) {
+            var absPath = utils.toAbsolute(path),//先转化为绝对路径
+                subPathes = utils.subPathes(absPath),
+                pathArray = [],
+                preEnd = [],
+                curStart = [],
+                normalPathData = [],
+                cubic = [], 
+                type, addM, i;
 
-            subPathes.forEach(function(item, index) {
-                var type = item.type;
-                var start = item.startPoint;
-                var end = item.endPoint;
-                var pd = item.pathData;
-                var cubic, contr1, contr2;
+            subPathes.forEach(function(subPath, index) {
+                normalPathData = subPath.normalPathData;
+                type = subPath.normalType;
+                curStart = subPath.startPoint;
+                addM = !isArrayEqual(preEnd, curStart);
 
-                if (x !== start[0] || y !== start[1]) {
-                    path.push(['M', start[0], start[1]]);
-                    preType = 'M';
+                if (addM) {
+                    pathArray.push(['M'].concat(curStart));
                 }
-
-                x = start[0];
-                y = start[1];
 
                 switch(type) {
                     case 'L':
                     case 'C':
-                        if (type === 'C') {
-                            contr2 = pd.slice(-4, -2);
-                            x2 = contr2[0];
-                            y2 = contr2[1];
+                        if (subPath.type === 'Z') {
+                            pathArray.push(['Z']);
+                        } else {
+                            pathArray.push([type].concat(normalPathData));
                         }
-
-                        path.push([type].concat(pd));
-                        preType = type;
-                        break;
-                    case 'Z':
-                        path.push([type]);
-                        preType = type;
-                        break;
-                    case 'H':
-                    case 'V':
-                        path.push(['L'].concat(end));
-                        preType = 'L';
                         break;
                     case 'Q':
-                        contr1 = pd.slice(-4, -2);
-                        x1 = contr1[0];
-                        y1 = contr1[1];
-
-                        cubic = g.upgradeBezier(start.concat(pd), 3);
-                        path.push(['C'].concat(cubic.slice(2)));
-
-                        preType = 'Q';//后边跟T时有用
-                        break;
-                    case 'S':
-                        if (preType === 'C') {
-                            x2 = 2 * x - x2;
-                            y2 = 2 * y - y2;
-                        } else {
-                            x2 = x;
-                            y2 = y;
-                        }
-                        path.push(['C', x2, y2].concat(pd));
-                        preType = 'C';
-                        break;
-                    case 'T':
-                        if (preType === 'Q') {
-                            x1 = 2 * x - x1;
-                            y1 = 2 * y - y1;
-                        } else {
-                            x1 = x;
-                            y1 = y;
-                        }
-              
-                        cubic = g.upgradeBezier(start.concat([x1, y1]).concat(pd), 3);
-                        contr1 = cubic.slice(-4, -2);
-                        x1 = contr1[0];
-                        y1 = contr1[1];
-
-                        path.push(['C'].concat(cubic.slice(2)));
-
-                        preType = 'Q';//后边跟T时有用
+                        normalPathData = g.upgradeBezier(curStart.concat(normalPathData), 3);
+                        pathArray.push(['C'].concat(normalPathData.slice(2)));
                         break;
                     case 'A':
-                        var cubics = [];
-                        var i;
-
-                        cubic = g.arc2curv(start.concat(pd));
+                        normalPathData = g.arc2curv(curStart.concat(normalPathData));
                    
-                        for (i = 0;i < cubic.length / 6; i ++) {
-                            cubics.push(cubic.slice(i * 6, (i + 1) * 6));
+                        for (i = 0;i < normalPathData.length / 6; i ++) {
+                            cubic = normalPathData.slice(i * 6, (i + 1) * 6);
+                            pathArray.push(['C'].concat(cubic));
                         }
-
-                        cubics.forEach(function(cubic, i) {
-                            path.push(['C'].concat(cubic));
-                        });
-                        preType = 'A';
                         break;
                     default:
                         console.log('unkown path command');
                         break;
                 }
-
-                x = end[0];
-                y = end[1];
-
+                preEnd = subPath.endPoint;
             });
            
-            return path;
+            return pathArray;
         },
         toCurve: function(pathString) {
             var normalPath = utils.toNormalized(pathString);
