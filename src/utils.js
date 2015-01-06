@@ -1,5 +1,26 @@
 define(function(require, exports, module) {
+    function fix(num) {
+        if (num instanceof Array) {
+            num.forEach(function(value, i) {
+                num[i] = round(value * precisionInverse) / precisionInverse;
+            });
+        } else {
+            num = round(num * precisionInverse) / precisionInverse;
+        }
+        return num;
+    }
+    function createPathElement() {
+        return document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    }
+
     var g = require('../src/geometry'),
+        math = Math,
+        sqrt = math.sqrt,
+        pow  = math.pow,
+        max  = math.max,
+        min  = math.min,
+        abs  = math.abs,
+        round = math.round,
         separatorRegExp = /(?!^)\s*,?\s*([+-]?\d+\.?\d*|[a-z])/igm,//用','分隔命令和数字，预处理
         replaceRegExp0 = /,?([a-z]),?/gim, //替换命令符两侧的','
         replaceRegExp1 = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)(?=\s[a-z]|$)/gim, //仅将当前坐标用','分隔
@@ -14,11 +35,12 @@ define(function(require, exports, module) {
             T: 'CurvetoQuadraticSmooth',
             A: 'Arc'
         },
-        precision = 1e-6;
+        precision = 1e-6,
+        precisionInverse = round(1 / precision);
 
     var utils = {
         point2point: function(x1, y1, x2, y2) {
-            return Math.sqrt(Math.pow(x1- x2, 2) + Math.pow(y1 - y2, 2));
+            return sqrt(pow(x1- x2, 2) + pow(y1 - y2, 2));
         },
         toString: function(pathOpt) {
             var path = pathOpt.path;
@@ -44,15 +66,15 @@ define(function(require, exports, module) {
         toArray: function() {
             if (!arguments.length) return;
             
-            var pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var pathElement = createPathElement();
             var path = [].slice.call(arguments).join(' ').replace(/,/g, ' ');
-            var result = [], pathList, i, type, item, param, lareFlag, sweepFlag;
+            var result = [], pathArray, i, type, item, param, lareFlag, sweepFlag;
 
             pathElement.setAttribute('d', path);
-            pathList = pathElement.pathSegList;
+            pathArray = pathElement.pathSegList;
 
-            for (i = 0; i < pathList.length; i++) {
-                item = pathList[i];
+            for (i = 0; i < pathArray.length; i++) {
+                item = pathArray[i];
                 type = item.pathSegTypeAsLetter;
 
                 switch (type.toLowerCase()) {
@@ -104,7 +126,7 @@ define(function(require, exports, module) {
                 segs.replaceItem(rseg, i);
             }
 
-            var pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var pathElement = createPathElement();
             var x, y, dx, dy, x0, y0, x1, y1, x2, y2, seg, segs, type, i;
 
             pathElement.setAttribute('d', path);
@@ -192,7 +214,7 @@ define(function(require, exports, module) {
                 segs.replaceItem(rseg, i);
             }
 
-            var pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var pathElement = createPathElement();
             var x, y, dx, dy, x0, y0, x1, y1, x2, y2, seg, segs, type, i;
 
             pathElement.setAttribute('d', path);
@@ -259,7 +281,7 @@ define(function(require, exports, module) {
         },
         nodesPos: function(path, x, y) {
             // x, y分别为当前路径的起始点坐标
-            var pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var pathElement = createPathElement();
             var x0, y0, type, segs, seg, pos = [], isBreakPoint, i;
 
             x = x || 0;
@@ -277,7 +299,7 @@ define(function(require, exports, module) {
                     if ('x' in seg) x = seg.x;
                     if ('y' in seg) y = seg.y;
                     if (type === 'M') {
-                        isBreakPoint = Math.abs(seg.x - x) > precision || Math.abs(seg.y - y) > precision;
+                        isBreakPoint = abs(seg.x - x) > precision || abs(seg.y - y) > precision;
                         x0 = x;
                         y0 = y;
                     }
@@ -302,7 +324,7 @@ define(function(require, exports, module) {
         },
         length: function(path, x, y) {
             // x、y为指定路径的起始点，如果有必要的话
-            var pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var pathElement = createPathElement();
 
             x = x || 0;
             y = y || 0;
@@ -410,43 +432,36 @@ define(function(require, exports, module) {
 
             return lens;
         },
-        at: function(pathString, position) {
-            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            var totalLength;
-
-            path.setAttribute('d', pathString);
-            totalLength = path.getTotalLength();
-
+        at: function(path, position) {
             if (position < 0 || position > totalLength) {
                 console.log('position is not in range of the path length');
                 return;
             }
+
+            var pathElement = createPathElement();
+            var totalLength, dl = 0.5, curPoint, frontPoint, behindPoint, rotate, tangent;
+
+            pathElement.setAttribute('d', path);
+            totalLength = pathElement.getTotalLength();
    
-            var precision = 1e-6, dl = 0.5;
-            var p, p1, p2, position1, position2;
-            var rotate, tangent, point;
+            curPoint = pathElement.getPointAtLength(position);
 
-            p = path.getPointAtLength(position);
+            position = max(position - dl, 0);
+            frontPoint = pathElement.getPointAtLength(position);
+            frontPoint = (dl >= sqrt(pow(frontPoint.x - curPoint.x, 2) + pow(frontPoint.y - curPoint.y, 2))) ? frontPoint : curPoint; // 考虑断点情况
 
-            position1 = Math.max(position - dl, 0);
-            p1 = path.getPointAtLength(position1);
-            // 判断是否为断点
-            p1 = (dl >= Math.sqrt(Math.pow(p1.x - p.x, 2) + Math.pow(p1.y - p.y, 2))) ? p1 : p;
+            position = min(position + dl, totalLength);
+            behindPoint = pathElement.getPointAtLength(position);
+            behindPoint = (dl >= sqrt(pow(behindPoint.x - curPoint.x, 2) + pow(behindPoint.y - curPoint.y, 2))) ? behindPoint : curPoint;// 考虑断点情况
 
-            position2 = Math.min(position + dl, totalLength);
-            p2 = path.getPointAtLength(position2);
-            p2 = (dl >= Math.sqrt(Math.pow(p2.x - p.x, 2) + Math.pow(p2.y - p.y, 2))) ? p2 : p;
-
-            rotate = (Math.abs(p2.x - p1.x) > precision) ? Math.atan((p2.y - p1.y) / (p2.x - p1.x)) :
-                (p2.y > p1.y) ? Math.PI * 0.5 : -Math.PI * 0.5;
-            tangent = [Math.cos(rotate), Math.sin(rotate)];
-            rotate = rotate;
-            point = [p.x, p.y];
+            rotate = (abs(behindPoint.x - frontPoint.x) > precision) ? atan((behindPoint.y - frontPoint.y) / (behindPoint.x - frontPoint.x)) : 
+                (behindPoint.y > frontPoint.y) ? PI * 0.5 : -PI * 0.5;
+            tangent = [cos(rotate), sin(rotate)];
 
             return {
-                point: point,
-                tangent: tangent,
-                rotate: rotate
+                point: fix([curPoint.x, curPoint.y]),
+                tangent: fix(tangent),
+                rotate: fix(rotate)
             };
         },
         cut: function(pathString, position) {
@@ -572,7 +587,7 @@ define(function(require, exports, module) {
             var position1, subs, subs1, pathString1;
 
             if (length) {
-                position1 = Math.min(position + length, ls.slice(-1)[0]);
+                position1 = min(position + length, ls.slice(-1)[0]);
             } else {
                 var n = ls.length;
                 var stop = false, i, cur;
@@ -795,7 +810,7 @@ define(function(require, exports, module) {
             n1 = subPathes1.length;
             n2 = subPathes2.length;
 
-            step = n2 > n1 ? Math.floor(n1 / (n2 - n1)) : 0;
+            step = n2 > n1 ? floor(n1 / (n2 - n1)) : 0;
             i = 0;
             while(i < n2 - n1) {
                 var end, fill = {};
@@ -832,7 +847,7 @@ define(function(require, exports, module) {
                 }
 
                 for(j = 0; j < pathData1.length; j++) {
-                    item = Math.round((pathData1[j] + t * (pathData2[j] - pathData1[j])) * 1e6) / 1e6 ;
+                    item = round((pathData1[j] + t * (pathData2[j] - pathData1[j])) * 1e6) / 1e6 ;
                     pathData.push(item);
                 }
 
