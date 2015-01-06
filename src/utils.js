@@ -1,9 +1,9 @@
 define(function(require, exports, module) {
     var g = require('../src/geometry'),
-        separatorRegExp = /(?!^)\s*,?\s*(\d+\.?\d*|[a-z])/igm,//用','分隔命令和数字，预处理
+        separatorRegExp = /(?!^)\s*,?\s*([+-]?\d+\.?\d*|[a-z])/igm,//用','分隔命令和数字，预处理
         replaceRegExp0 = /,?([a-z]),?/gim, //替换命令符两侧的','
-        replaceRegExp1 = /(\d+\.?\d*)\s(\d+\.?\d*)(?=\s[a-z]|$)/gim, //仅将当前坐标用','分隔
-        replaceRegExp2 = /(\d+\.?\d*)\s(\d+\.?\d*)\s*(?=[a-z]|$)/gim, //仅将当前坐标用','分隔, 并且在命令符前断行
+        replaceRegExp1 = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)(?=\s[a-z]|$)/gim, //仅将当前坐标用','分隔
+        replaceRegExp2 = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)\s*(?=[a-z]|$)/gim, //仅将当前坐标用','分隔, 并且在命令符前断行
         fullcommands = {M: 'Moveto',
             L: 'Lineto',
             H: 'LinetoHorizontal',
@@ -80,6 +80,11 @@ define(function(require, exports, module) {
                         break;
                     case 'c':
                         param = [item.x1, item.y1, item.x2, item.y2, item.x, item.y];
+                        break;
+                    case 'z':
+                        param = [];
+                        break;
+                    default:
                         break;
                 }
 
@@ -318,6 +323,7 @@ define(function(require, exports, module) {
 
             pathArray.forEach(function(item, index) {
                 type = item[0];
+                pathData = item.slice(1);
                 x = nodesPos[index].x;
                 y = nodesPos[index].y;
 
@@ -333,18 +339,14 @@ define(function(require, exports, module) {
                         break;
                     case 'A':
                         type2 = type;
-                        pathData  = item.slice(1);
                         break;
                     case 'Q':
                         type2 = type;
-                        pathData  = item.slice(1);
                         x1 = pathData[0];
                         y1 = pathData[1];
                         break;
                     case 'T':
                         type2 = 'Q';
-                        pathData  = item.slice(1);
-                        pathData.unshift(x1, y1);
                         if (preType === 'Q' || preType === 'T') {
                             x1 = 2 * sx - x1;
                             y1 = 2 * sy - y1;
@@ -352,17 +354,15 @@ define(function(require, exports, module) {
                             x1 = sx;
                             y1 = sy;
                         }
+                        pathData.unshift(x1, y1);
                         break;
                     case 'C':
                         type2 = type;
-                        pathData  = item.slice(1);
                         x2 = pathData[2];
                         y2 = pathData[3];
                         break;
                     case 'S':
                         type2 = 'C';
-                        pathData  = item.slice(1);
-                        pathData.unshift(x1, y1);
                         if (preType === 'C' || preType ==='S') {
                             x1 = 2 * sx - x2;
                             y1 = 2 * sy - y2;
@@ -370,9 +370,9 @@ define(function(require, exports, module) {
                             x1 = sx;
                             y1 = sy;
                         }
-
                         x2 = pathData[0];
                         y2 = pathData[1];
+                        pathData.unshift(x1, y1);
                         break;
                 }
 

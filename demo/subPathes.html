@@ -77,11 +77,11 @@ define('start', function(require) {
         subPathes.forEach(function(sub, i) {
             var obj = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-            obj.setAttribute('d', sub.pathString);
+            obj.setAttribute('d', sub.path);
             svg.appendChild(obj);
 
             console.log('第' + i + '条路径：\n');
-            console.log(sub.pathString);
+            console.log(sub.path);
         });
     }
 

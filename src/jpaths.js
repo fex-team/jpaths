@@ -11,9 +11,9 @@ define(function(require, exports, module) {
     var utils = require('../src/utils'),
         shapeDefines = {},
         jPaths = {},
-        separatorRegExp = /(?!^)\s*,?\s*(\d+\.?\d*|[a-z]+)/igm;//用','分隔命令和数字，预处理
+        separatorRegExp = /(?!^)\s*,?\s*([+-]?\d+\.?\d*|[a-z]+)/igm;//用','分隔命令和数字，预处理
         isCommandRegExp = /^[MLHVCSQTAZ]$/i;//判断自定义path命令是否为svg 原生的path命令
-        segCommandRegExp = /[a-z]+(,\d+\.?\d*)*/igm; //一段命令，包括命令符和参数
+        segCommandRegExp = /[a-z]+(,[+-]?\d+\.?\d*)*/igm; //一段命令，包括命令符和参数
 
     function Path() {
         var path = [].slice.call(arguments);
@@ -39,6 +39,8 @@ define(function(require, exports, module) {
     };
 
     Path.prototype.append = function() {
+        if (!arguments.length) return;
+
         var path = [].slice.call(arguments).toString().replace(separatorRegExp, ',$1');
         var result, path2 = '', type;
 
