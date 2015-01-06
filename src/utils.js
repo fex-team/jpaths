@@ -1,8 +1,8 @@
 define(function(require, exports, module) {
     function fix(num) {
         if (num instanceof Array) {
-            num.forEach(function(value, i) {
-                num[i] = round(value * precisionInverse) / precisionInverse;
+          num.forEach(function(value, i) {
+            num[i] = round(value * precisionInverse) / precisionInverse;
             });
         } else {
             num = round(num * precisionInverse) / precisionInverse;
@@ -12,20 +12,67 @@ define(function(require, exports, module) {
     function createPathElement() {
         return document.createElementNS('http://www.w3.org/2000/svg', 'path');
     }
+    function point2point(x1, y1, x2, y2) {
+        return sqrt(pow(x1- x2, 2) + pow(y1 - y2, 2));
+    }
+    function binarySearch(array, des) {//用于定位des在array中的确切位置
+        var low = 0; 
+    　　var high = array.length-1; 
+        var middle;
 
-    var g = require('../src/geometry'),
-        math = Math,
-        sqrt = math.sqrt,
-        pow  = math.pow,
-        max  = math.max,
-        min  = math.min,
-        abs  = math.abs,
+    　　while(low <= high) { 
+    　　    middle = (low + high)/2; 
+
+    　　    if(des == array[middle]) { 
+    　　        return middle; 
+    　　    }else if(des < array[middle]) { 
+    　　        high = middle - 1; 
+    　　    }else { 
+    　　        low = middle + 1; 
+    　　    } 
+    　　} 
+    　　return -1;
+    }
+    function binarySearch2(array, des) {//用于定位des在array中所在区间的起始位置
+        var low = 0; 
+    　　var high = array.length-1; 
+        var middle;
+
+    　　while(low <= high) { 
+    　　    middle = floor((low + high) * 0.5); 
+
+            if (des > array[middle]) {
+                low = middle + 1;
+            } else if (des <= array[middle]) {
+                if (des > (array[middle - 1] || 0)) {
+                    return middle;
+                } else {
+                    high = middle - 1;
+                }
+            }
+    　　} 
+
+    　　return -1;
+    }
+
+    var g     = require('../src/geometry'),
+        math  = Math,
+        sqrt  = math.sqrt,
+        pow   = math.pow,
+        max   = math.max,
+        min   = math.min,
+        abs   = math.abs,
         round = math.round,
+        sin   = math.sin,
+        cos   = math.cos,
+        tan   = math.tan,
+        atan  = math.atan,
+        PI    = math.PI,
         separatorRegExp = /(?!^)\s*,?\s*([+-]?\d+\.?\d*|[a-z])/igm,//用','分隔命令和数字，预处理
-        replaceRegExp0 = /,?([a-z]),?/gim, //替换命令符两侧的','
-        replaceRegExp1 = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)(?=\s[a-z]|$)/gim, //仅将当前坐标用','分隔
-        replaceRegExp2 = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)\s*(?=[a-z]|$)/gim, //仅将当前坐标用','分隔, 并且在命令符前断行
-        fullcommands = {M: 'Moveto',
+        replaceRegExp0  = /,?([a-z]),?/gim, //替换命令符两侧的','
+        replaceRegExp1  = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)(?=\s[a-z]|$)/gim, //仅将当前坐标用','分隔
+        replaceRegExp2  = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)\s*(?=[a-z]|$)/gim, //仅将当前坐标用','分隔, 并且在命令符前断行
+        fullcommands    = {M: 'Moveto',
             L: 'Lineto',
             H: 'LinetoHorizontal',
             V: 'LinetoVertical',
@@ -39,9 +86,6 @@ define(function(require, exports, module) {
         precisionInverse = round(1 / precision);
 
     var utils = {
-        point2point: function(x1, y1, x2, y2) {
-            return sqrt(pow(x1- x2, 2) + pow(y1 - y2, 2));
-        },
         toString: function(pathOpt) {
             var path = pathOpt.path;
 
@@ -464,37 +508,28 @@ define(function(require, exports, module) {
                 rotate: fix(rotate)
             };
         },
-        cut: function(pathString, position) {
-            var sp = utils.subPathes(pathString);
-            var ls = utils.lengthes(sp);
-            var pl = utils.toArray(pathString);
-            var p0 = position;
-            var cp = utils.at(pathString, position).point;
-            var n = ls.length;
-
-            if (position < 0 || position > ls[n - 1]) {
+        cut: function(path, position) {
+            if (position < 0 || position > utils.length(path)) {
                 return;
             } 
 
-            var stop   = false,
-                pathString1,
-                i, cur = 0, index, type, big, pathData, start, item,
-                sub1, sub2, subs;
-
-            for(i = 0; i < n && !stop; i++) {
-                if (ls[i] >= position) {
-                    cur  = i;
-                    stop = !stop;
-                }
-            }
-            
+            var sp = utils.subPathes(path);
+            var ls = utils.lengthes(sp);
+            var pl = utils.toArray(path);
+            var cp = utils.at(path, position).point;
+            var cur = binarySearch2(ls, position);
+            var index, type, big, pathData, start, item,
+                sub1, sub2, subs, i;
+            var n = ls.length;
+            var pathString1;
+         
             item  = sp[cur];
             index = item.index;
             type  = item.type;
             big   = type.toUpperCase();
 
             if (type !== big) {
-                pathString1 = utils.toAbsolute(item.pathString);
+                pathString1 = utils.toAbsolute(item.path);
                 pathData   = utils.toArray(pathString1)[1].slice(1);
             } else {
                 pathData   = item.pathData;
