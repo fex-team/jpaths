@@ -69,7 +69,7 @@ define(function(require, exports, module) {
         var middle;
 
     　　while(low <= high) { 
-    　　    middle = floor((low + high) * 0.5); 
+    　　    middle = Math.floor((low + high) * 0.5); 
 
             if (des > array[middle]) {
                 low = middle + 1;
@@ -80,7 +80,14 @@ define(function(require, exports, module) {
                     high = middle - 1;
                 }
             }
+            console.log(low, middle, high);
     　　} 
+
+        if (low === middle) {
+            return 0;
+        } else if (middle === high) {
+            return high;
+        }
 
     　　return -1;
     };
@@ -508,28 +515,28 @@ define(function(require, exports, module) {
                 rotate: fix(rotate)
             };
         },
-        cut: function(path, position) {
-            if (position < 0 || position > utils.length(path)) {
-                return;
-            } 
+        cut: function(path, position) { 
             path = utils.toAbsolute(path);
 
-            var subPathes = utils.subPathes(path);
-            var lengthes = utils.lengthes(subPathes);
-            var curPoint = utils.at(path, position).point;
-            var curIndex = binarySearch2(lengthes, position);
-            var curSubPath  = subPathes[curIndex];
-            var pathArray = utils.toArray(path);
-            var pathData = curSubPath.normalPathData;
-            var start = curSubPath.startPoint.slice(0);
-            var end   = curSubPath.endPoint.slice(0);
-            var type = curSubPath.normalType;
-            var subPath1 = pathArray.slice(0, curSubPath.index);
-            var subPath2  = pathArray.slice(curSubPath.index + 1);
-            var subs, t;
+            var subPathes = utils.subPathes(path),
+                lengthes = utils.lengthes(subPathes),
+                curPoint = utils.at(path, position).point,
+                curIndex = binarySearch2(lengthes, position),
+                curSubPath  = subPathes[curIndex],
+                pathArray = utils.toArray(path),
+                pathData = curSubPath.normalPathData,
+                start = curSubPath.startPoint.slice(0),
+                end   = curSubPath.endPoint.slice(0),
+                type = curSubPath.normalType,
+                subPath1 = pathArray.slice(0, curSubPath.index),
+                subPath2  = pathArray.slice(curSubPath.index + 1),
+                subs, t;
 
             pathData.unshift(start[0], start[1]);
 
+            if (position > lengthes.slice(-1)[0] || !position) {
+                return [pathArray, []];
+            }
             if (curIndex > 0) {
                 position -= lengthes[curIndex - 1];
             }
@@ -545,7 +552,7 @@ define(function(require, exports, module) {
                     break;
                 case 'Q':
                 case 'C':
-                    subs   = g.cutBezier(pathData, t);
+                    subs = g.cutBezier(pathData, t);
             }
 
             subPath1.push([type].concat(subs[0].slice(2)));
@@ -553,33 +560,20 @@ define(function(require, exports, module) {
 
             return [subPath1, subPath2];
         },
-        sub: function(pathString, position, length) {
-            var sp = utils.subPathes(pathString);
-            var ls = utils.lengthes(sp);
-            var position1, subs, subs1, pathString1;
-
+        sub: function(path, position, length) {
+            var subPathes = utils.subPathes(path);
+            var lengthes = utils.lengthes(subPathes);
+            var subs, path2;
+            
             if (length) {
-                position1 = min(position + length, ls.slice(-1)[0]);
+                subs = utils.cut(path, position + length);
+                path2 = utils.toString({path: subs[0].toString(), opt: 0});
+                subs = utils.cut(path2, position);
             } else {
-                var n = ls.length;
-                var stop = false, i, cur;
-
-                for(i = 0; i < n && !stop; i++) {
-                    if (ls[i] >= position) {
-                        cur  = i;
-                        stop = !stop;
-                    }
-                }
-
-                position1 = ls[cur];
+                subs = utils.cut(path, position);
             }
 
-            subs = utils.cut(pathString, position1);
-
-            pathString1 = utils.toString({path: subs[0].toString(), opt: 0});
-            sub1 = utils.cut(pathString1, position);
-
-            return sub1[1];
+            return subs[1];
         },
         toNormalized: function(pathString) {
             var pathString1 = utils.toAbsolute(pathString);//先转化为绝对路径
