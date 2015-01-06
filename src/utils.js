@@ -1,5 +1,35 @@
 define(function(require, exports, module) {
-    function fix(num) {
+    var g     = require('../src/geometry'),
+        math  = Math,
+        sqrt  = math.sqrt,
+        pow   = math.pow,
+        max   = math.max,
+        min   = math.min,
+        abs   = math.abs,
+        round = math.round,
+        sin   = math.sin,
+        cos   = math.cos,
+        tan   = math.tan,
+        atan  = math.atan,
+        floor = math.floor,
+        PI    = math.PI,
+        separatorRegExp = /(?!^)\s*,?\s*([+-]?\d+\.?\d*|[a-z])/igm,//用','分隔命令和数字，预处理
+        replaceRegExp0  = /,?([a-z]),?/gim, //替换命令符两侧的','
+        replaceRegExp1  = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)(?=\s[a-z]|$)/gim, //仅将当前坐标用','分隔
+        replaceRegExp2  = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)\s*(?=[a-z]|$)/gim, //仅将当前坐标用','分隔, 并且在命令符前断行
+        fullcommands    = {M: 'Moveto',
+            L: 'Lineto',
+            H: 'LinetoHorizontal',
+            V: 'LinetoVertical',
+            C: 'CurvetoCubic',
+            S: 'CurvetoCubicSmooth',
+            Q: 'CurvetoQuadratic',
+            T: 'CurvetoQuadraticSmooth',
+            A: 'Arc'
+        },
+        precision = 1e-6,
+        precisionInverse = round(1 / precision);
+    var fix = function(num) {
         if (num instanceof Array) {
           num.forEach(function(value, i) {
             num[i] = round(value * precisionInverse) / precisionInverse;
@@ -8,14 +38,14 @@ define(function(require, exports, module) {
             num = round(num * precisionInverse) / precisionInverse;
         }
         return num;
-    }
-    function createPathElement() {
+    };
+    var createPathElement = function() {
         return document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    }
-    function point2point(x1, y1, x2, y2) {
+    };
+    var point2point = function(x1, y1, x2, y2) {
         return sqrt(pow(x1- x2, 2) + pow(y1 - y2, 2));
-    }
-    function binarySearch(array, des) {//用于定位des在array中的确切位置
+    };
+    var binarySearch = function(array, des) {//用于定位des在array中的确切位置
         var low = 0; 
     　　var high = array.length-1; 
         var middle;
@@ -32,8 +62,8 @@ define(function(require, exports, module) {
     　　    } 
     　　} 
     　　return -1;
-    }
-    function binarySearch2(array, des) {//用于定位des在array中所在区间的起始位置
+    };
+    var binarySearch2 = function(array, des) {//用于定位des在array中所在区间的起始位置
         var low = 0; 
     　　var high = array.length-1; 
         var middle;
@@ -53,37 +83,7 @@ define(function(require, exports, module) {
     　　} 
 
     　　return -1;
-    }
-
-    var g     = require('../src/geometry'),
-        math  = Math,
-        sqrt  = math.sqrt,
-        pow   = math.pow,
-        max   = math.max,
-        min   = math.min,
-        abs   = math.abs,
-        round = math.round,
-        sin   = math.sin,
-        cos   = math.cos,
-        tan   = math.tan,
-        atan  = math.atan,
-        PI    = math.PI,
-        separatorRegExp = /(?!^)\s*,?\s*([+-]?\d+\.?\d*|[a-z])/igm,//用','分隔命令和数字，预处理
-        replaceRegExp0  = /,?([a-z]),?/gim, //替换命令符两侧的','
-        replaceRegExp1  = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)(?=\s[a-z]|$)/gim, //仅将当前坐标用','分隔
-        replaceRegExp2  = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)\s*(?=[a-z]|$)/gim, //仅将当前坐标用','分隔, 并且在命令符前断行
-        fullcommands    = {M: 'Moveto',
-            L: 'Lineto',
-            H: 'LinetoHorizontal',
-            V: 'LinetoVertical',
-            C: 'CurvetoCubic',
-            S: 'CurvetoCubicSmooth',
-            Q: 'CurvetoQuadratic',
-            T: 'CurvetoQuadraticSmooth',
-            A: 'Arc'
-        },
-        precision = 1e-6,
-        precisionInverse = round(1 / precision);
+    };
 
     var utils = {
         toString: function(pathOpt) {
@@ -448,7 +448,7 @@ define(function(require, exports, module) {
                     len = utils.length(path2, sx, sy);
                     subs.push({path: path2, 
                         type: type, 
-                        nomalType: type2,
+                        normalType: type2,
                         index: index, 
                         count: count++, 
                         normalPathData: pathData, 
@@ -466,8 +466,8 @@ define(function(require, exports, module) {
             return subs;
         },
         lengthes: function(subPathes) {
-            var lens = [];
-            var sumLen = 0;
+            var lens = [],
+                sumLen = 0;
 
             [].forEach.call(subPathes, function(item, index) {
                 sumLen += item.length;
@@ -512,109 +512,46 @@ define(function(require, exports, module) {
             if (position < 0 || position > utils.length(path)) {
                 return;
             } 
+            path = utils.toAbsolute(path);
 
-            var sp = utils.subPathes(path);
-            var ls = utils.lengthes(sp);
-            var pl = utils.toArray(path);
-            var cp = utils.at(path, position).point;
-            var cur = binarySearch2(ls, position);
-            var index, type, big, pathData, start, item,
-                sub1, sub2, subs, i;
-            var n = ls.length;
-            var pathString1;
-         
-            item  = sp[cur];
-            index = item.index;
-            type  = item.type;
-            big   = type.toUpperCase();
+            var subPathes = utils.subPathes(path);
+            var lengthes = utils.lengthes(subPathes);
+            var curPoint = utils.at(path, position).point;
+            var curIndex = binarySearch2(lengthes, position);
+            var curSubPath  = subPathes[curIndex];
+            var pathArray = utils.toArray(path);
+            var pathData = curSubPath.normalPathData;
+            var start = curSubPath.startPoint.slice(0);
+            var end   = curSubPath.endPoint.slice(0);
+            var type = curSubPath.normalType;
+            var subPath1 = pathArray.slice(0, curSubPath.index);
+            var subPath2  = pathArray.slice(curSubPath.index + 1);
+            var subs, t;
 
-            if (type !== big) {
-                pathString1 = utils.toAbsolute(item.path);
-                pathData   = utils.toArray(pathString1)[1].slice(1);
-            } else {
-                pathData   = item.pathData;
-            }
-
-            sub1  = pl.slice(0, index);
-            sub2  = pl.slice(index + 1);
-
-            start = item.startPoint.slice(0);
-            end   = item.endPoint.slice(0);
-
-
-            if (big == 'S' || big == 'T') {
-                var item1, type1, pd1, hx, hy, flag;
-
-                if (cur > 0) {
-                        item1 = sp[cur - 1];
-                        type1 = item1.type.toUpperCase();
-                    }
-
-                flag = (big == 'S' && (type1 === 'S' || type1 === 'C')) ||
-                    (big == 'T' && type1 == 'Q');//严格需向前考察
-
-                if (flag) {
-                    pd1   = item1.pathData.slice(-4, -2);
-                    hx    = 2 * start[0] - pd1[0];
-                    hy    = 2 * start[1] - pd1[1];
-                    pathData.unshift(hx, hy);
-                } else {
-                    pathData.unshift(start[0], start[1]);
-                }
-            }
-      
             pathData.unshift(start[0], start[1]);
 
-            var temp1, temp2;
-            switch(big) {
-                case 'H': 
-                case 'V':
-                case 'L':
-                    sub1.push(['L', cp[0], cp[1]]);
-                    sub2.unshift(['M', cp[0], cp[1]], ['L', end[0], end[1]]);
-                    break;
-                case 'A':
-                    subs = g.cutArc(pathData, cp);
-
-                    temp1 = subs[0].slice(2);
-                    temp1.unshift(big);
-                    sub1.push(temp1);
-
-                    temp2 = subs[1].slice(2);
-                    temp2.unshift(big);
-                    sub2.unshift(['M', cp[0], cp[1]], temp2);
-                    break;
-                case 'Q':
-                case 'T':
-                case 'S':
-                case 'C':
-                    var t, type2;
-                    if (cur > 0) {
-                        position -= ls[cur - 1];
-  
-                    }
-                    t      = position / (sp[cur].length);
-
-                    subs   = g.cutBezier(pathData, t);
-
-                    if(big == 'Q' || big == 'T') {
-                        type2 = 'Q';
-                    } else {
-                        type2 = 'C';
-                    }
-
-                    temp1  = subs[0].slice(2);
-                    temp1.unshift(type2);
-                    sub1.push(temp1);
-
-                    temp2  = subs[1].slice(2);
-                    temp2.unshift(type2);
-
-                    var pos1 = subs[1].slice(0, 2);
-                    sub2.unshift(['M', pos1[0], pos1[1]], temp2);
+            if (curIndex > 0) {
+                position -= lengthes[curIndex - 1];
             }
 
-            return [sub1, sub2];
+            t = position / (subPathes[curIndex].length);
+
+            switch(type) {
+                case 'L':
+                    subs = g.cutLine(pathData, t);
+                    break;
+                case 'A':
+                    subs = g.cutArc(pathData, curPoint);
+                    break;
+                case 'Q':
+                case 'C':
+                    subs   = g.cutBezier(pathData, t);
+            }
+
+            subPath1.push([type].concat(subs[0].slice(2)));
+            subPath2.unshift(['M'].concat(curPoint), [type].concat(subs[1].slice(2)));
+
+            return [subPath1, subPath2];
         },
         sub: function(pathString, position, length) {
             var sp = utils.subPathes(pathString);
