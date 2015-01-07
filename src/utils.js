@@ -652,16 +652,17 @@ define(function(require, exports, module) {
 
             return normalPath;
         },
-        transform: function(pathString, matrix) {
-            var normalPath = utils.toNormalized(pathString);
-            var tran = g.transform;
-            var x, y, type;
+        transform: function(path, matrix) {
+            var normalPath = utils.toNormalized(path),
+                tran = g.transform,
+                end = [],
+                point1 = [],
+                point2 = [],
+                len, type;
 
             normalPath.forEach(function(sub, i) {
-                var end  = sub.slice(-2);
-                var len  = sub.length;
-                var end2, sub2;
-
+                end  = sub.slice(-2);
+                len  = sub.length;
                 type = sub[0];
 
                 switch(type) {
@@ -669,18 +670,19 @@ define(function(require, exports, module) {
                         break;
                     case 'M':
                     case 'L':
-                        end2 = tran(matrix, end);
-                        normalPath[i] = [type].concat(end2);
+                        end = tran(matrix, end);
+                        normalPath[i] = [type].concat(end);
                         break;
                     case 'C':
-                        var p1   = sub.slice(1, 3);
-                        var p2   = sub.slice(3, 5);
-                        var p11, p21;
- 
-                        p11  = tran(matrix, p1);
-                        p21  = tran(matrix, p2);
-                        end2 = tran(matrix, end);
-                        normalPath[i] = [type].concat(p11, p21, end2);
+                        end = tran(matrix, end);
+
+                        point1 = sub.slice(1, 3);
+                        point1  = tran(matrix, point1);
+
+                        point2 = sub.slice(3, 5);
+                        point2  = tran(matrix, point2);
+                        
+                        normalPath[i] = [type].concat(point1, point2, end);
                         break;
                 }
             });
