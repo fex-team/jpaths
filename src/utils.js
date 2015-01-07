@@ -2,6 +2,7 @@ define(function(require, exports, module) {
     function createPathElement() {
         return document.createElementNS('http://www.w3.org/2000/svg', 'path');
     }
+
     function fix(num) {
         if (num instanceof Array) {
             num.forEach(function(value, i) {
@@ -12,15 +13,14 @@ define(function(require, exports, module) {
         }
         return num;
     }
+
     function binarySearch(array, des) { //用于定位des在array中的确切位置
         var low = 0,
             high = array.length - 1,
             middle;
-
-        　　
+     　　
         while (low <= high) {　　
             middle = (low + high) / 2;
-
             　　
             if (des == array[middle]) {　　
                 return middle;　　
@@ -32,11 +32,12 @@ define(function(require, exports, module) {
         }　　
         return -1;
     }
+
     function binarySearch2(array, des) { //用于定位des在array中所在区间的起始位置
-        var low = 0,　　
+        var low = 0,   　　
             high = array.length - 1,
-            middle;
-　
+            middle;　
+
         while (low <= high) {　　
             middle = Math.floor((low + high) * 0.5);
 
@@ -49,17 +50,16 @@ define(function(require, exports, module) {
                     high = middle - 1;
                 }
             }
-            console.log(low, middle, high);　　
         }
 
         if (low === middle) {
             return 0;
         } else if (middle === high) {
             return high;
-        }
-　　
+        }　　
         return -1;
     }
+
     function isArrayEqual(array1, array2) {
         if (array1.length !== array2.length) {
             return false;
@@ -128,40 +128,43 @@ define(function(require, exports, module) {
             var pathElement = createPathElement(),
                 path = [].slice.call(arguments).join(' ').replace(/,/g, ' '),
                 result = [],
-                pathArray, i, type, item, param, lareFlag, sweepFlag;
+                segs = {},
+                seg = {},
+                param = [],
+                i, type, lareFlag, sweepFlag;
 
             pathElement.setAttribute('d', path);
-            pathArray = pathElement.pathSegList;
+            segs = pathElement.pathSegList;
 
-            for (i = 0; i < pathArray.length; i++) {
-                item = pathArray[i];
-                type = item.pathSegTypeAsLetter;
+            for (i = 0; i < segs.length; i++) {
+                seg = segs[i];
+                type = seg.pathSegTypeAsLetter;
 
                 switch (type.toLowerCase()) {
                     case 'm':
                     case 'l':
                     case 't':
-                        param = [item.x, item.y];
+                        param = [seg.x, seg.y];
                         break;
                     case 'h':
-                        param = [item.x];
+                        param = [seg.x];
                         break;
                     case 'v':
-                        param = [item.y];
+                        param = [seg.y];
                         break;
                     case 'q':
-                        param = [item.x1, item.y1, item.x, item.y];
+                        param = [seg.x1, seg.y1, seg.x, seg.y];
                         break;
                     case 's':
-                        param = [item.x2, item.y2, item.x, item.y];
+                        param = [seg.x2, seg.y2, seg.x, seg.y];
                         break;
                     case 'a':
-                        lareFlag = item.largeArcFlag ? 1 : 0;
-                        sweepFlag = item.sweepFlag ? 1 : 0;
-                        param = [item.r1, item.r2, item.angle, lareFlag, sweepFlag, item.x, item.y];
+                        lareFlag = seg.largeArcFlag ? 1 : 0;
+                        sweepFlag = seg.sweepFlag ? 1 : 0;
+                        param = [seg.r1, seg.r2, seg.angle, lareFlag, sweepFlag, seg.x, seg.y];
                         break;
                     case 'c':
-                        param = [item.x1, item.y1, item.x2, item.y2, item.x, item.y];
+                        param = [seg.x1, seg.y1, seg.x2, seg.y2, seg.x, seg.y];
                         break;
                     case 'z':
                         param = [];
@@ -169,9 +172,7 @@ define(function(require, exports, module) {
                     default:
                         break;
                 }
-
-                param.unshift(type);
-                result.push(param);
+                result.push([type].concat(param));
             }
             return result;
         },
@@ -345,15 +346,15 @@ define(function(require, exports, module) {
         },
         nodesPos: function(path, x, y) {
             // x, y分别为当前路径的起始点坐标
+            x = x || 0;
+            y = y || 0;
+            
             var pathElement = createPathElement(),
                 segs = {},
                 seg = {},
                 nodesPos = [],
                 isBreakPoint = false,
                 x0, y0, type, i;
-
-            x = x || 0;
-            y = y || 0;
 
             pathElement.setAttribute('d', path);
             segs = pathElement.pathSegList;
@@ -474,7 +475,10 @@ define(function(require, exports, module) {
 
                 if (type !== 'M') {
                     path2 = ['M', sx, sy, type2].concat(pathData).toString();
-                    path2 = utils.toString({path: path2, opt: 0 });
+                    path2 = utils.toString({
+                        path: path2,
+                        opt: 0
+                    });
                     len = utils.length(path2, sx, sy);
 
                     subs.push({
