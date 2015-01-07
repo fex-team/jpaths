@@ -15,9 +15,9 @@ define(function(require, exports, module) {
     }
 
     function binarySearch(array, des) { //用于定位des在array中的确切位置
-        var low = 0,
-            high = array.length - 1,
-            middle;
+        var low = 0;
+        var high = array.length - 1;
+        var middle;
      　　
         while (low <= high) {　　
             middle = (low + high) / 2;
@@ -34,12 +34,12 @@ define(function(require, exports, module) {
     }
 
     function binarySearch2(array, des) { //用于定位des在array中所在区间的起始位置
-        var low = 0,   　　
-            high = array.length - 1,
-            middle;　
+        var low = 0;   　　
+        var high = array.length - 1;
+        var middle;　
 
         while (low <= high) {　　
-            middle = Math.floor((low + high) * 0.5);
+            middle = floor((low + high) * 0.5);
 
             if (des > array[middle]) {
                 low = middle + 1;
@@ -68,25 +68,25 @@ define(function(require, exports, module) {
         }
     }
 
-    var g = require('../src/geometry'),
-        math = Math,
-        sqrt = math.sqrt,
-        pow = math.pow,
-        max = math.max,
-        min = math.min,
-        abs = math.abs,
-        round = math.round,
-        sin = math.sin,
-        cos = math.cos,
-        tan = math.tan,
-        atan = math.atan,
-        floor = math.floor,
-        PI = math.PI,
-        separatorRegExp = /(?!^)\s*,?\s*([+-]?\d+\.?\d*|[a-z])/igm, //用','分隔命令和数字，预处理
-        replaceRegExp0 = /,?([a-z]),?/gim, //替换命令符两侧的','
-        replaceRegExp1 = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)(?=\s[a-z]|$)/gim, //仅将当前坐标用','分隔
-        replaceRegExp2 = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)\s*(?=[a-z]|$)/gim, //仅将当前坐标用','分隔, 并且在命令符前断行
-        fullcommands = {
+    var g = require('../src/geometry');
+    var math = Math;
+    var sqrt = math.sqrt;
+    var pow = math.pow;
+    var max = math.max;
+    var min = math.min;
+    var abs = math.abs;
+    var round = math.round;
+    var sin = math.sin;
+    var cos = math.cos;
+    var tan = math.tan;
+    var atan = math.atan;
+    var floor = math.floor;
+    var PI = math.PI;
+    var separatorRegExp = /(?!^)\s*,?\s*([+-]?\d+\.?\d*|[a-z])/igm; //用','分隔命令和数字，预处理
+    var replaceRegExp0 = /,?([a-z]),?/gim; //替换命令符两侧的','
+    var replaceRegExp1 = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)(?=\s[a-z]|$)/gim; //仅将当前坐标用','分隔
+    var replaceRegExp2 = /([+-]?\d+\.?\d*)\s([+-]?\d+\.?\d*)\s*(?=[a-z]|$)/gim; //仅将当前坐标用','分隔, 并且在命令符前断行
+    var fullcommands = {
             M: 'Moveto',
             L: 'Lineto',
             H: 'LinetoHorizontal',
@@ -96,9 +96,9 @@ define(function(require, exports, module) {
             Q: 'CurvetoQuadratic',
             T: 'CurvetoQuadraticSmooth',
             A: 'Arc'
-        },
-        precision = 1e-6,
-        precisionInverse = round(1 / precision);
+        };
+    var precision = 1e-6;
+    var precisionInverse = round(1 / precision);
 
     var utils = {
         toString: function(pathOpt) {
@@ -125,13 +125,16 @@ define(function(require, exports, module) {
         toArray: function() {
             if (!arguments.length) return;
 
-            var pathElement = createPathElement(),
-                path = [].slice.call(arguments).join(' ').replace(/,/g, ' '),
-                result = [],
-                segs = {},
-                seg = {},
-                param = [],
-                i, type, lareFlag, sweepFlag;
+            var pathElement = createPathElement();
+            var path = [].slice.call(arguments).join(' ').replace(/,/g, ' ');
+            var result = [];
+            var segs = {};
+            var seg = {};
+            var param = [];
+            var i; 
+            var type; 
+            var lareFlag; 
+            var sweepFlag;
 
             pathElement.setAttribute('d', path);
             segs = pathElement.pathSegList;
@@ -180,17 +183,28 @@ define(function(require, exports, module) {
             if (!path) return;
 
             function set(type) {
-                var args = [].slice.call(arguments, 1),
-                    rcmd = 'createSVGPathSeg' + type + 'Rel',
-                    rseg = pathElement[rcmd].apply(pathElement, args);
+                var args = [].slice.call(arguments, 1);
+                var rcmd = 'createSVGPathSeg' + type + 'Rel';
+                var rseg = pathElement[rcmd].apply(pathElement, args);
 
                 segs.replaceItem(rseg, i);
             }
 
-            var pathElement = createPathElement(),
-                segs = {},
-                seg = {},
-                x, y, dx, dy, x0, y0, x1, y1, x2, y2, type, i;
+            var pathElement = createPathElement();
+            var segs = {};
+            var seg = {};
+            var x; 
+            var y; 
+            var dx; 
+            var dy; 
+            var x0; 
+            var y0; 
+            var x1; 
+            var y1; 
+            var x2; 
+            var y2; 
+            var type; 
+            var i;
 
             pathElement.setAttribute('d', path);
             segs = pathElement.pathSegList;
@@ -270,17 +284,28 @@ define(function(require, exports, module) {
             if (!path) return;
 
             function set(type) {
-                var args = [].slice.call(arguments, 1),
-                    rcmd = 'createSVGPathSeg' + type + 'Abs',
-                    rseg = pathElement[rcmd].apply(pathElement, args);
+                var args = [].slice.call(arguments, 1);
+                var rcmd = 'createSVGPathSeg' + type + 'Abs';
+                var rseg = pathElement[rcmd].apply(pathElement, args);
 
                 segs.replaceItem(rseg, i);
             }
 
-            var pathElement = createPathElement(),
-                segs = {},
-                seg = {},
-                x, y, dx, dy, x0, y0, x1, y1, x2, y2, type, i;
+            var pathElement = createPathElement();
+            var segs = {};
+            var seg = {};
+            var x;
+            var y;
+            var dx;
+            var dy;
+            var x0;
+            var y0;
+            var x1;
+            var y1;
+            var x2;
+            var y2;
+            var type;
+            var i;
 
             pathElement.setAttribute('d', path);
             segs = pathElement.pathSegList;
@@ -348,13 +373,16 @@ define(function(require, exports, module) {
             // x, y分别为当前路径的起始点坐标
             x = x || 0;
             y = y || 0;
-            
-            var pathElement = createPathElement(),
-                segs = {},
-                seg = {},
-                nodesPos = [],
-                isBreakPoint = false,
-                x0, y0, type, i;
+
+            var pathElement = createPathElement();
+            var segs = {};
+            var seg = {};
+            var nodesPos = [];
+            var isBreakPoint = false;
+            var x0;
+            var y0;
+            var type;
+            var i;
 
             pathElement.setAttribute('d', path);
             segs = pathElement.pathSegList;
@@ -410,13 +438,24 @@ define(function(require, exports, module) {
         subPathes: function(path) {
             path = utils.toAbsolute(path);
 
-            var nodesPos = utils.nodesPos(path),
-                pathArray = utils.toArray(path),
-                subs = [],
-                path2 = [],
-                pathData = [],
-                count = 0,
-                sx, sy, x, y, x1, y1, x2, y2, preType, type, type2, len;
+            var nodesPos = utils.nodesPos(path);
+            var pathArray = utils.toArray(path);
+            var subs = [];
+            var path2 = [];
+            var pathData = [];
+            var count = 0;
+            var sx;
+            var sy;
+            var x;
+            var y;
+            var x1;
+            var y1;
+            var x2;
+            var y2;
+            var preType;
+            var type;
+            var type2;
+            var len;
 
             pathArray.forEach(function(item, index) {
                 type = item[0];
@@ -503,8 +542,8 @@ define(function(require, exports, module) {
             return subs;
         },
         lengthes: function(subPathes) {
-            var lens = [],
-                sumLen = 0;
+            var lens = [];
+            var sumLen = 0;
 
             [].forEach.call(subPathes, function(item, index) {
                 sumLen += item.length;
@@ -519,12 +558,14 @@ define(function(require, exports, module) {
                 return;
             }
 
-            var pathElement = createPathElement(),
-                curPoint = [],
-                frontPoint = [],
-                behindPoint = [],
-                dl = 0.5,
-                totalLength, rotate, tangent;
+            var pathElement = createPathElement();
+            var curPoint = [];
+            var frontPoint = [];
+            var behindPoint = [];
+            var dl = 0.5;
+            var totalLength;
+            var rotate;
+            var tangent;
 
             pathElement.setAttribute('d', path);
             totalLength = pathElement.getTotalLength();
@@ -552,20 +593,20 @@ define(function(require, exports, module) {
         cut: function(path, position) {
             path = utils.toAbsolute(path);
 
-            var subPathes = utils.subPathes(path),
-                lengthes = utils.lengthes(subPathes),
-                curPoint = utils.at(path, position).point,
-                curIndex = binarySearch2(lengthes, position),
-                curSubPath = subPathes[curIndex],
-                pathArray = utils.toArray(path),
-                pathData = curSubPath.normalPathData,
-                start = curSubPath.startPoint,
-                end = curSubPath.endPoint,
-                type = curSubPath.normalType,
-                subPath1 = pathArray.slice(0, curSubPath.index),
-                subPath2 = pathArray.slice(curSubPath.index + 1),
-                subs = [],
-                t;
+            var subPathes = utils.subPathes(path);
+            var lengthes = utils.lengthes(subPathes);
+            var curPoint = utils.at(path, position).point;
+            var curIndex = binarySearch2(lengthes, position);
+            var curSubPath = subPathes[curIndex];
+            var pathArray = utils.toArray(path);
+            var pathData = curSubPath.normalPathData;
+            var start = curSubPath.startPoint;
+            var end = curSubPath.endPoint;
+            var type = curSubPath.normalType;
+            var subPath1 = pathArray.slice(0, curSubPath.index);
+            var subPath2 = pathArray.slice(curSubPath.index + 1);
+            var subs = [];
+            var t;
 
             pathData.unshift(start[0], start[1]);
 
@@ -596,10 +637,10 @@ define(function(require, exports, module) {
             return [subPath1, subPath2];
         },
         sub: function(path, position, length) {
-            var subPathes = utils.subPathes(path),
-                lengthes = utils.lengthes(subPathes),
-                subs = [],
-                path2 = [];
+            var subPathes = utils.subPathes(path);
+            var lengthes = utils.lengthes(subPathes);
+            var subs = [];
+            var path2 = [];
 
             if (length) {
                 subs = utils.cut(path, position + length);
@@ -615,13 +656,14 @@ define(function(require, exports, module) {
             return subs[1];
         },
         toNormalized: function(path) {
-            var absPath = utils.toAbsolute(path), //先转化为绝对路径
-                subPathes = utils.subPathes(absPath),
-                normalPathData = [],
-                curStart = [],
-                pathArray = [],
-                cubic = [],
-                type, i;
+            var absPath = utils.toAbsolute(path); //先转化为绝对路径
+            var subPathes = utils.subPathes(absPath);
+            var normalPathData = [];
+            var curStart = [];
+            var pathArray = [];
+            var cubic = [];
+            var type; 
+            var i;
 
             subPathes.forEach(function(subPath, index) {
                 normalPathData = subPath.normalPathData;
@@ -662,12 +704,12 @@ define(function(require, exports, module) {
             return pathArray;
         },
         toCurve: function(path) {
-            var normalPath = utils.toNormalized(path),
-                pathData = [],
-                curStart = [],
-                curEnd = [],
-                cubic = [],
-                type;
+            var normalPath = utils.toNormalized(path);
+            var pathData = [];
+            var curStart = [];
+            var curEnd = [];
+            var cubic = [];
+            var type;
 
             normalPath.forEach(function(sub, i) {
                 type = sub[0];
@@ -684,12 +726,13 @@ define(function(require, exports, module) {
             return normalPath;
         },
         transform: function(path, matrix) {
-            var normalPath = utils.toNormalized(path),
-                tran = g.transform,
-                end = [],
-                point1 = [],
-                point2 = [],
-                len, type;
+            var normalPath = utils.toNormalized(path);
+            var tran = g.transform;
+            var end = [];
+            var point1 = [];
+            var point2 = [];
+            var len; 
+            var type;
 
             normalPath.forEach(function(sub, i) {
                 end = sub.slice(-2);
@@ -727,28 +770,28 @@ define(function(require, exports, module) {
                 return desPath;
             }
 
-            var sourcePath2 = utils.toCurve(sourcePath),
-                desPath2 = utils.toCurve(desPath),
-                sourceSubPathes = utils.subPathes(utils.toString({
+            var sourcePath2 = utils.toCurve(sourcePath);
+            var desPath2 = utils.toCurve(desPath);
+            var sourceSubPathes = utils.subPathes(utils.toString({
                     path: sourcePath2.join(','),
                     opt: 0
-                })),
-                desSubPathes = utils.subPathes(utils.toString({
+                }));
+            var desSubPathes = utils.subPathes(utils.toString({
                     path: desPath2.join(','),
                     opt: 0
-                })),
-                sourceSubPath = [],
-                desSubPath = [],
-                n1 = sourceSubPathes.length,
-                n2 = desSubPathes.length,
-                path = '',
-                insertPos = [],
-                insertFillPath = {},
-                insertIndex = 0,
-                i = 0,
-                j = 0,
-                step = 0,
-                value;
+                }));
+            var sourceSubPath = [];
+            var desSubPath = [];
+            var n1 = sourceSubPathes.length;
+            var n2 = desSubPathes.length;
+            var path = '';
+            var insertPos = [];
+            var insertFillPath = {};
+            var insertIndex = 0;
+            var i = 0;
+            var j = 0;
+            var step = 0;
+            var value;
 
             if (n1 > n2) {
                 var temp = desSubPathes;
@@ -773,9 +816,9 @@ define(function(require, exports, module) {
             }
 
             for (i = 0; i < n2; i++) {
-                var sourceSubPathData = [],
-                    desSubPathData = [],
-                    tweenSubPathData = [];
+                var sourceSubPathData = [];
+                var desSubPathData = [];
+                var tweenSubPathData = [];
 
                 sourceSubPath = sourceSubPathes[i];
                 desSubPath = desSubPathes[i];
@@ -813,10 +856,10 @@ define(function(require, exports, module) {
                 if (svgCanvas.createSVGPathSegMovetoAbs) {
                     svgCanvas.setAttribute('d', path);
                 } else if (svgCanvas.canvas) {
-                    var normalPath = utils.toNormalized(path),
-                        ctx = svgCanvas,
-                        pathData = [],
-                        type;
+                    var normalPath = utils.toNormalized(path);
+                    var ctx = svgCanvas;
+                    var pathData = [];
+                    var type;
 
                     ctx.strokeWidth = 1;
                     normalPath.forEach(function(subPath, i) {

@@ -32,15 +32,16 @@ define(function(require, exports, module) {
      * @return {[Array]}            [新点坐标集]
      */
     function _pRotate2P(pointArray, beta) {
-        var c   = pointArray.slice(0, 2),
-            m   = pointArray.slice(2, 4),
-            dx  = -c[0],// 中心点平移到原点的x位移
-            dy  = -c[1],// 中心点平移到原点的y位移
-            sin = Math.sin(beta),
-            cos = Math.cos(beta),
-            x0  = m[0] + dx,// 旋转点平移后的x
-            y0  = m[1] + dy;// 旋转点平移后的y
-        var x1, y1;
+        var c   = pointArray.slice(0, 2);
+        var m   = pointArray.slice(2, 4);
+        var dx  = -c[0];// 中心点平移到原点的x位移
+        var dy  = -c[1];// 中心点平移到原点的y位移
+        var sin = Math.sin(beta);
+        var cos = Math.cos(beta);
+        var x0  = m[0] + dx;// 旋转点平移后的x
+        var y0  = m[1] + dy;// 旋转点平移后的y
+        var x1;
+        var y1;
 
         beta = beta || 0;
         x1   = x0 * cos - y0 * sin;// 向量旋转
@@ -79,18 +80,29 @@ define(function(require, exports, module) {
      * @return {[Array]}                [圆心坐标集]
      */
     function getArcCenter(arcPointArray, rx, ry, x_axis_rotation) {
-        var ap   = arcPointArray,
-            beta = x_axis_rotation || 0,
-            cos  = Math.cos(beta),
-            sin  = Math.sin(beta),
-            x1   = ap[0],
-            y1   = ap[1],
-            x2   = ap[2],
-            y2   = ap[3],
-            x3   = ap[4],
-            y3   = ap[5], 
-            k    = rx * rx / (ry * ry), 
-            m1, m2, a, b, c, c10, c11, c20, c21, c1, c0, t;
+        var ap   = arcPointArray;
+        var beta = x_axis_rotation || 0;
+        var cos  = Math.cos(beta);
+        var sin  = Math.sin(beta);
+        var x1   = ap[0];
+        var y1   = ap[1];
+        var x2   = ap[2];
+        var y2   = ap[3];
+        var x3   = ap[4];
+        var y3   = ap[5]; 
+        var k    = rx * rx / (ry * ry); 
+        var m1; 
+        var m2;
+        var a;
+        var b;
+        var c;
+        var c10;
+        var c11;
+        var c20;
+        var c21;
+        var c1;
+        var c0;
+        var t;
             
         //求第一组参数
         c10 = x1 * cos + y1 * sin;
@@ -136,13 +148,15 @@ define(function(require, exports, module) {
      * @return {[Num]}              [扫过的角度，角度制]
      */
     function sweepAngular(pointArray) {
-        var p  = pointArray,
-            v1 = [p[2] - p[0], p[3] - p[1]],
-            v2 = [p[4] - p[0], p[5] - p[1]],
-            l1 = Math.sqrt(v1[0] * v1[0] + v1[1] * v1[1]),
-            l2 = Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1]),
-            pi = Math.PI,
-            ang1, ang2, ang;
+        var p  = pointArray;
+        var v1 = [p[2] - p[0], p[3] - p[1]];
+        var v2 = [p[4] - p[0], p[5] - p[1]];
+        var l1 = Math.sqrt(v1[0] * v1[0] + v1[1] * v1[1]);
+        var l2 = Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1]);
+        var pi = Math.PI;
+        var ang1; 
+        var ang2;
+        var ang;
 
         ang1 = Math.acos(v1[0] / l1);
         ang1 = v1[1] > 0 ? ang1 : pi * 2 - ang1;
@@ -175,16 +189,19 @@ define(function(require, exports, module) {
      * @return {[Array]}             [切割后的两条子贝塞尔曲线的坐标集]
      */
     function cutBezier(bezierArray, t) {
-        var cut = _cutData(t || 0.5),
-            n = Math.round(bezierArray.length * 0.5 -1),/*贝塞尔曲线的次数*/
-            cb = [], lp = [], rp = [],/*分别用于存储t点左右侧子曲线的控制点的坐标*/
-            ba = bezierArray.slice(0),
-            i = 0;
+        var cut = _cutData(t || 0.5);
+        var n = Math.round(bezierArray.length * 0.5 -1);/*贝塞尔曲线的次数*/
+        var cb = []; 
+        var lp = []; 
+        var rp = [];/*分别用于存储t点左右侧子曲线的控制点的坐标*/
+        var ba = bezierArray.slice(0);
+        var i = 0;
 
         while(n >= 0) {
-            var r = ba.slice(-2),
-                p = [],
-                x, y;
+            var r = ba.slice(-2);
+            var p = [];
+            var x;
+            var y;
             
             lp.push(ba[0], ba[1]);
             rp.unshift(r[0], r[1]);
@@ -213,9 +230,10 @@ define(function(require, exports, module) {
      * @return {[Array]}           [分割后的两子线段坐标集]
      */
     function cutLine(lineArray, t) {
-        var cut = _cutData(t || 0.5),
-            la = lineArray,
-            cx, cy;
+        var cut = _cutData(t || 0.5);
+        var la = lineArray;
+        var cx; 
+        var cy;
 
         cx = cut(la[0], la[2]);
         cy = cut(la[1], la[3]);
@@ -238,30 +256,32 @@ define(function(require, exports, module) {
      * @return {[Array]}          [切割成的两段弧的参数]
      */
     function cutArc(arcArray, cutPoint) {
-        var aa     = arcArray,
-            cp     = cutPoint, //绝对坐标
-            sp     = aa.slice(0, 2),//圆弧起点, 绝对坐标
-            ep     = aa.slice(-2),//圆弧终点, 绝对坐标
-            rx     = aa[2],
-            ry     = aa[3],
-            rotate = aa[4],
-            lf     = aa[5],
-            sf     = aa[6],
-            sub1   = [],
-            sub2   = [];
+        var aa     = arcArray;
+        var cp     = cutPoint; //绝对坐标
+        var sp     = aa.slice(0, 2);//圆弧起点, 绝对坐标
+        var ep     = aa.slice(-2);//圆弧终点, 绝对坐标
+        var rx     = aa[2];
+        var ry     = aa[3];
+        var rotate = aa[4];
+        var lf     = aa[5];
+        var sf     = aa[6];
+        var sub1   = [];
+        var sub2   = [];
 
         if (!lf) {
             sub1 = [sp[0], sp[1], rx, ry, rotate, 0, sf, cp[0], cp[1]];
             sub2 = [cp[0], cp[1], rx, ry, rotate, 0, sf, ep[0], ep[1]];
         } else {
-            var arcPointArray = sp.concat(cp, ep),
-                gc   = getArcCenter,
-                sw   = sweepAngular,
-                pi   = Math.pi,
-                cent = gc(arcPointArray, rx, ry, rotate * pi / 180),
-                lf1  = 1,
-                lf2  = 1,
-                pointArray, sweepAng1, sweepAng2;
+            var arcPointArray = sp.concat(cp, ep);
+            var gc   = getArcCenter;
+            var sw   = sweepAngular;
+            var pi   = Math.pi;
+            var cent = gc(arcPointArray, rx, ry, rotate * pi / 180);
+            var lf1  = 1;
+            var lf2  = 1;
+            var pointArray; 
+            var sweepAng1; 
+            var sweepAng2;
 
             if (sf) {
                 pointArray = cent.concat(sp, cp);
@@ -303,15 +323,16 @@ define(function(require, exports, module) {
      * @param  {[type]} n           [要升级到的级数n, n>n0(原始阶)]
      * @return {[type]}             [升阶后的贝赛尔曲线的坐标集]
      */
-    function upgradeBezier(bezierArray, n) {
+    function upgradeBezier(bezierArray, n) {                                //toDo优化
         function _p(pi_1, pi, i, n) {
             var t = i / (n + 1);
             return t * pi_1 + (1 - t) * pi;
         }
 
-        var ba = bezierArray.slice(0),
-            n0 = Math.round(ba.length * 0.5 - 1),//贝赛尔曲线的原始阶
-            b = [], i;
+        var ba = bezierArray.slice(0);
+        var n0 = Math.round(ba.length * 0.5 - 1);//贝赛尔曲线的原始阶
+        var b = []; 
+        var i;
 
         if (n0 >= n) {
             return false;
@@ -354,14 +375,14 @@ define(function(require, exports, module) {
         var sf = aa[6];
         var x2 = aa[7];
         var y2 = aa[8];
-        var math = Math,
-            PI = math.PI,
-            abs = Math.abs,
-            _120 = PI * 120 / 180,
-            rad = PI / 180 * (+angle || 0),
-            res = [],
-            xy,
-            rotate = function(x, y, rad) {
+        var math = Math;
+        var PI = math.PI;
+        var abs = Math.abs;
+        var _120 = PI * 120 / 180;
+        var rad = PI / 180 * (+angle || 0);
+        var res = [];
+        var xy;
+        var rotate = function(x, y, rad) {
                 var X = x * math.cos(rad) - y * math.sin(rad),
                     Y = x * math.sin(rad) + y * math.cos(rad);
                 return {
