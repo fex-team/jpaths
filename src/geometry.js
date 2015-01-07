@@ -36,8 +36,6 @@ define(function(require, exports, module) {
         var m   = pointArray.slice(2, 4);
         var dx  = -c[0];// 中心点平移到原点的x位移
         var dy  = -c[1];// 中心点平移到原点的y位移
-        var sin = Math.sin(beta);
-        var cos = Math.cos(beta);
         var x0  = m[0] + dx;// 旋转点平移后的x
         var y0  = m[1] + dy;// 旋转点平移后的y
         var x1;
