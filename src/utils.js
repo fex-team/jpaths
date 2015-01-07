@@ -569,9 +569,9 @@ define(function(require, exports, module) {
             return [subPath1, subPath2];
         },
         sub: function(path, position, length) {
-            var subPathes = utils.subPathes(path);
-            var lengthes = utils.lengthes(subPathes);
-            var subs, path2;
+            var subPathes = utils.subPathes(path),
+                lengthes = utils.lengthes(subPathes),
+                subs, path2;
 
             if (length) {
                 subs = utils.cut(path, position + length);
@@ -631,29 +631,23 @@ define(function(require, exports, module) {
             return pathArray;
         },
         toCurve: function(path) {
-            var normalPath = utils.toNormalized(path);
-            var x, y, x0, y0, pathData, type, zEnd, curStart, curEnd;
+            var normalPath = utils.toNormalized(path),
+                pathData = [],
+                curStart = [],
+                curEnd = [],
+                cubic = [],
+                type;
 
             normalPath.forEach(function(sub, i) {
                 type = sub[0];
                 pathData = sub.slice(1);
                 curEnd = sub.slice(-2);
 
-                if (type === 'M') {
-                    zEnd = curStart;
-                    curStart = curEnd;
-                } else if (type === 'Z'){
-                    x = x0;
-                    y = y0;
-                } else if (type === 'L'){
-                    if (type == 'L') {
-                        var bezier = g.upgradeBezier([x, y].concat(end), 3);
-
-                        normalPath[i] = ['C'].concat(bezier.slice(2));
-                    }
-                    x = end[0];
-                    y = end[1];
+                if (type === 'L'){
+                    cubic = g.upgradeBezier(curStart.concat(curEnd), 3);
+                    normalPath[i] = ['C'].concat(cubic.slice(2));
                 }
+                curStart = curEnd;
             });
 
             return normalPath;

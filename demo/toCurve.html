@@ -14,15 +14,15 @@
             fill: none;
             stroke-width: 2px;
         }
+        svg path:nth-child(odd) {
+            stroke: blue;
+        }
+        svg path:nth-child(even){
+            stroke: red;
+        }
         svg path:first-child {
             stroke: #ccc;
             stroke-width: 6px;
-        }
-        svg path:nth-child(2) {
-            stroke: blue;
-        }
-        svg path:nth-child(3){
-            stroke: red;
         }
     </style>
 </head>
@@ -64,11 +64,10 @@ define('start', function(require) {
         subPathes.forEach(function(sub, i) {
             var obj1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
        
-            obj1.setAttribute('d', sub.pathString);
+            obj1.setAttribute('d', sub.path);
             svg.appendChild(obj1);
         });
 
-        console.log(subPathes);
         console.log('曲线化后的路径为：');
         console.log(newPath.toString('%n'));
     }
