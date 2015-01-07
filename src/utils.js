@@ -469,7 +469,8 @@ define(function(require, exports, module) {
                         pathData: item.slice(1),
                         startPoint: [sx, sy], 
                         endPoint: [x, y], 
-                        length: len
+                        length: len,
+                        isMoved: preType === 'M'
                     });
                 }
 
@@ -585,20 +586,18 @@ define(function(require, exports, module) {
         toNormalized: function(path) {
             var absPath = utils.toAbsolute(path),//先转化为绝对路径
                 subPathes = utils.subPathes(absPath),
-                pathArray = [],
-                preEnd = [],
+                normalPathData = [], 
                 curStart = [],
-                normalPathData = [],
-                cubic = [], 
-                type, addM, i;
+                pathArray = [], 
+                cubic = [],
+                type, i;
 
             subPathes.forEach(function(subPath, index) {
                 normalPathData = subPath.normalPathData;
                 type = subPath.normalType;
                 curStart = subPath.startPoint;
-                addM = !isArrayEqual(preEnd, curStart);
 
-                if (addM) {
+                if (subPath.isMoved) {
                     pathArray.push(['M'].concat(curStart));
                 }
 
@@ -627,23 +626,22 @@ define(function(require, exports, module) {
                         console.log('unkown path command');
                         break;
                 }
-                preEnd = subPath.endPoint;
             });
            
             return pathArray;
         },
-        toCurve: function(pathString) {
-            var normalPath = utils.toNormalized(pathString);
-            var x, y, x0, y0;
+        toCurve: function(path) {
+            var normalPath = utils.toNormalized(path);
+            var x, y, x0, y0, pathData, type, zEnd, curStart, curEnd;
 
             normalPath.forEach(function(sub, i) {
-                var type = sub[0];
-                var pathData = sub.slice(1);
-                var end = sub.slice(-2);
+                type = sub[0];
+                pathData = sub.slice(1);
+                curEnd = sub.slice(-2);
 
                 if (type === 'M') {
-                    x0 = x = end[0];
-                    y0 = y = end[1];
+                    zEnd = curStart;
+                    curStart = curEnd;
                 } else if (type === 'Z'){
                     x = x0;
                     y = y0;
