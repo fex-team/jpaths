@@ -16,19 +16,6 @@ define(function(require, exports, module) {
     }
 
     /**
-     * [_fixNum 保留浮点数f后p位小数，去掉多余零]
-     * @param  {[Float]} f [需处理的浮点数]
-     * @param  {[Num]} p   [需保留的小数位数]
-     * @return {[Float]}   [处理后的浮点数]
-     */
-    function _fixNum(f, p) {
-        p = p || 4;
-
-        var m = eval('1e' + p);
-        return Math.round(f * m) / m;
-    }
-
-    /**
      * [pRotate2P 点绕点旋转后的新点<辅助> 暂不暴露]
      * @param  {[Array]} pointArray [中心点和旋转点的坐标集]
      * @param  {[Num]} beta       [逆时针旋转的角度，负值表示顺时针旋转(弧度制)]
@@ -45,8 +32,7 @@ define(function(require, exports, module) {
      * @return {[Array]}            [新点坐标集]
      */
     function _pRotate2P(pointArray, beta) {
-        var fix = _fixNum,
-            c   = pointArray.slice(0, 2),
+        var c   = pointArray.slice(0, 2),
             m   = pointArray.slice(2, 4),
             dx  = -c[0],// 中心点平移到原点的x位移
             dy  = -c[1],// 中心点平移到原点的y位移
@@ -63,8 +49,8 @@ define(function(require, exports, module) {
         x1  -= dx;// 平移回去
         y1  -= dy;
         
-        x1   = fix(x1 - dx);//保留四位有效数字，去掉多余零
-        y1   = fix(y1 - dy);
+        x1   = x1 - dx;//保留四位有效数字，去掉多余零
+        y1   = y1 - dy;
 
         return [x1, y1];
     }
@@ -93,8 +79,7 @@ define(function(require, exports, module) {
      * @return {[Array]}                [圆心坐标集]
      */
     function getArcCenter(arcPointArray, rx, ry, x_axis_rotation) {
-        var fix  = _fixNum,
-            ap   = arcPointArray,
+        var ap   = arcPointArray,
             beta = x_axis_rotation || 0,
             cos  = Math.cos(beta),
             sin  = Math.sin(beta),
@@ -151,7 +136,6 @@ define(function(require, exports, module) {
      * @return {[Num]}              [扫过的角度，角度制]
      */
     function sweepAngular(pointArray) {
-        var fix = _fixNum;
         var p  = pointArray,
             v1 = [p[2] - p[0], p[3] - p[1]],
             v2 = [p[4] - p[0], p[5] - p[1]],
@@ -171,7 +155,7 @@ define(function(require, exports, module) {
             ang = pi * 2 + ang;
         }
         
-        return fix(ang * 180 / pi, 2); //保留两位小数
+        return ang * 180 / pi; //保留两位小数
     }
 
     g.sweepAngular = sweepAngular;
@@ -254,7 +238,6 @@ define(function(require, exports, module) {
      * @return {[Array]}          [切割成的两段弧的参数]
      */
     function cutArc(arcArray, cutPoint) {
-        var fix    = _fixNum;
         var aa     = arcArray,
             cp     = cutPoint, //绝对坐标
             sp     = aa.slice(0, 2),//圆弧起点, 绝对坐标
