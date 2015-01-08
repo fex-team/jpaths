@@ -131,10 +131,10 @@ define(function(require, exports, module) {
             var segs = {};
             var seg = {};
             var param = [];
-            var i; 
             var type; 
             var lareFlag; 
             var sweepFlag;
+            var i; 
 
             pathElement.setAttribute('d', path);
             segs = pathElement.pathSegList;

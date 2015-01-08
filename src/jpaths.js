@@ -16,11 +16,10 @@ define(function(require, exports, module) {
     var segCommandRegExp = /[a-z]+(,[+-]?\d+\.?\d*)*/igm; //一段命令，包括命令符和参数
 
     function Path() {
-        var path = [].slice.call(arguments);
+        var path = [].slice.call(arguments).join(',');
 
         this._ = {};
-        this._.path = 'M0 0';//初始化path值
-        this.set(path);
+        this.set(path || 'M0 0');
 
     }
 
@@ -30,12 +29,12 @@ define(function(require, exports, module) {
         shapeDefines[name] = fn;
     };
 
-    Path.prototype.set = function() {
-        if (!arguments.length) throw new Error("The param in the Method set() can't be empty or undefined.");
-        
-        var path = [].slice.call(arguments).join(',');
-
+    Path.prototype.set = function(path) {
+        // if (!arguments.length) throw new Error("The param in the Method set() can't be empty or undefined.");
         this._.path = utils.toString({path: path, opt: 0 }); //toDo 添加异常处理
+        this._.path1 = utils.toString({path: path, opt: 1});
+        this._.path2 = utils.toString({path: path, opt: 2});
+        this._.hasChanged = false;
     };
 
     Path.prototype.append = function() {
@@ -56,12 +55,14 @@ define(function(require, exports, module) {
         }
         
         this._.path += utils.toString({path: path2, opt: 0});
+        this._.path1 += utils.toString({path: path2, opt: 1});
+        this._.path2 += utils.toString({path: path2, opt: 2});
+        this._.hasChanged = true;
         // 添加异常处理;
     };
     Path.prototype.toString = function(opt) {
-        var that = this;
-        opt = !opt ? 0 : opt === '%s' ? 1 : opt === '%n' ? 2 : 0; 
-        return utils.toString({path: that._.path, opt: opt}); 
+        opt = !opt ? '' : opt === '%s' ? 1 : opt === '%n' ? 2 : '';
+        return this._['path' + opt]; 
     };
     Path.prototype.toArray = Path.prototype.valueOf = function() {
         var that = this;
@@ -73,20 +74,25 @@ define(function(require, exports, module) {
     };
     Path.prototype.toAbsolute = function() {
         var that = this;
-        return utils.toAbsolute(that._.path);
+        that._.absPath = utils.toAbsolute(that._.path);
+        return that._.absPath;
     };
     Path.prototype.nodesPos = function() {
         var that = this;
-        return utils.nodesPos(that._.path);
+        that._.nodesPos = utils.nodesPos(that._.path);
+        return that._.nodesPos;
     };
     Path.prototype.length = function() {
         var that = this;
-        return utils.length(that._.path);
+        that._.length = utils.length(that._.path);
+        return that._.length;
     };
     Path.prototype.lengthes = function() {
         // 用于获取第一段子路径，前两段子路径，..., 直到所有子路径的长度
+        var that = this;
         var subPathes = this.subPathes();
-        return utils.lengthes(subPathes);
+        that._.lengthes = utils.lengthes(subPathes);
+        return that._.lengthes;
     };
     Path.prototype.subPathes = function() {
         var that = this;
