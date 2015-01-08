@@ -122,22 +122,23 @@ define(function(require, exports, module) {
             }
             return path;
         },
-        toArray: function() {
-            if (!arguments.length) return;
+        toArray: function(path, pathElement) {
+            if (!path) {
+                return ['M', 0, 0];
+            }
+            if (!pathElement) {
+                pathElement = createPathElement();
+                pathElement.setAttribute('d', path);
+            }
 
-            var pathElement = createPathElement();
-            var path = [].slice.call(arguments).join(' ').replace(/,/g, ' ');
-            var result = [];
-            var segs = {};
+            var segs = pathElement.pathSegList;
             var seg = {};
             var param = [];
+            var result = [];
             var type; 
             var lareFlag; 
             var sweepFlag;
-            var i; 
-
-            pathElement.setAttribute('d', path);
-            segs = pathElement.pathSegList;
+            var i = 0; 
 
             for (i = 0; i < segs.length; i++) {
                 seg = segs[i];
