@@ -34,7 +34,7 @@ define(function(require, exports, module) {
         this._.path1 = utils.toString({path: path, opt: 1});
         this._.path2 = utils.toString({path: path, opt: 2});
         this._.pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        this._.pathElement.setAttribute('d', path);
+        this._.pathElement.setAttribute('d', this._.path);
         this._.hasChanged = false;
     };
 
@@ -45,11 +45,11 @@ define(function(require, exports, module) {
         var result, path2 = '', type;
 
         while ((result = segCommandRegExp.exec(path)) !== null) {
-            result = result[0];
-            type = result.charAt(0);
+            result = result[0].split(',');
+            type = result[0];
 
             if (shapeDefines[type]) {
-                path2 += shapeDefines[type].apply(null, result.subString(2).split(','));
+                path2 += shapeDefines[type].apply(null, result.slice(1));
             } else {
                 path2 += result;
             }
