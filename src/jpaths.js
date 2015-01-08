@@ -18,9 +18,7 @@ define(function(require, exports, module) {
     function Path() {
         var path = [].slice.call(arguments).join(',');
 
-        this._ = {};
-        this.set(path || 'M0 0');
-
+        this.init(path || 'M0 0');
     }
 
     Path.prototype.define = function(name, fn) {
@@ -29,11 +27,14 @@ define(function(require, exports, module) {
         shapeDefines[name] = fn;
     };
 
-    Path.prototype.set = function(path) {
+    Path.prototype.init = function(path) {
         // if (!arguments.length) throw new Error("The param in the Method set() can't be empty or undefined.");
+        this._ = {};
         this._.path = utils.toString({path: path, opt: 0 }); //toDo 添加异常处理
         this._.path1 = utils.toString({path: path, opt: 1});
         this._.path2 = utils.toString({path: path, opt: 2});
+        this._.pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        this._.pathElement.setAttribute('d', path);
         this._.hasChanged = false;
     };
 
@@ -57,6 +58,7 @@ define(function(require, exports, module) {
         this._.path += utils.toString({path: path2, opt: 0});
         this._.path1 += utils.toString({path: path2, opt: 1});
         this._.path2 += utils.toString({path: path2, opt: 2});
+        this._.pathElement.setAttribute('d', this._.path);
         this._.hasChanged = true;
         // 添加异常处理;
     };
@@ -66,7 +68,7 @@ define(function(require, exports, module) {
     };
     Path.prototype.toArray = Path.prototype.valueOf = function() {
         var that = this;
-        return utils.toArray(that._.path);
+        return utils.toArray(that._.path, that._.pathElement);
     };
     Path.prototype.toRelative = function() {
         var that = this;
