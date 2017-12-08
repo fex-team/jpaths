@@ -29,6 +29,7 @@
     <path fill="none" id ="path"/>
 </svg>  
 </body>
+<script src="../lib/pathseg.js"></script>
 <script src="../lib/require.js"></script>
 <script>
 
@@ -41,11 +42,11 @@ define('start', function(require) {
     var t = 0;
 
     pathElement1.setAttribute('d', 'M50,50l40 50a40,50, 0, 1, 0, 40, 40v50m20 30h100l40, 60c100,100 250,100 150,100');
-    pathElement2.setAttribute('d', "M200 350 l-75 200 l150 0 Z");
+    pathElement2.setAttribute('d', "M200 350 l-75 200 l150 0 L200 350");
 
     for(var i = 0; i < 20; i++) {
         setTimeout(function() { 
-            path.tween("M200 350 l-75 200 l150 0 Z", t += 0.05).render(pathElement);
+            path.tween("M200 350 l-75 200 l150 0 L200 350", t += 0.05).render(pathElement);
         }, 100 * i);
     }
 

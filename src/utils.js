@@ -140,8 +140,8 @@ define(function(require, exports, module) {
             var sweepFlag;
             var i = 0; 
 
-            for (i = 0; i < segs.length; i++) {
-                seg = segs[i];
+            for (i = 0; i < segs.numberOfItems; i++) {
+                seg = segs.getItem(i);
                 type = seg.pathSegTypeAsLetter;
 
                 switch (type.toLowerCase()) {
